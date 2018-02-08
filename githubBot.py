@@ -2,13 +2,25 @@ import requests
 import base64
 import yaml
 import sys
+import logging
 
-if len(sys.argv) != 2:
-	print "Github bot not invoked correctly. Need github Access Token"
-	sys.exit()
+from persistor import persistor
+logger = logging.getLogger(__name__)
+logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%b/%d/%Y %H:%M:%S %Z',
+					level=logging.INFO)
+
+#TODO use argparse.
+if len(sys.argv) != 5:
+    print "Github bot not invoked correctly. Need github Access Token"
+    sys.exit()
 
 githubAccessToken = sys.argv[1]
+n4jUrl = sys.argv[2]
+n4jUser = sys.argv[3]
+n4jpwd = sys.argv[4]
 repos = ['popeye_appviz']
+persistor = persistor(url=n4jUrl, username=n4jUser, pwd=n4jpwd, logger=logger)
+
 
 for repo in repos:
 	r = requests.get('https://api.github.com/repos/mulesoft-labs/' + repo + '/contents/popeye.yaml?access_token=' + githubAccessToken)
@@ -16,11 +28,10 @@ for repo in repos:
 		data = r.json()['content']
 		yaml_content = yaml.load(base64.b64decode(data))
 		print("Found Popeye Yaml for " + repo)
-		for dependency in yaml_content['require']:
-			srcNode = repo
-			destNode = dependency
-			print("Found a dependency from " + srcNode + " - " + destNode)
-			# TODO: Invoke Neo4j API Here
+        for dependency in yaml_content['require']:
+			me = repo
+			print("Found a dependency from " + me + " - " + dependency)
+			persistor.createServiceDependency(me, dependency)
 	else:
 		print("Error in reading from github for " + repo)
 		print("Status Code: " + str(r.status_code))
