@@ -21,14 +21,13 @@ n4jpwd = sys.argv[4]
 repos = ['popeye_appviz']
 persistor = persistor(url=n4jUrl, username=n4jUser, pwd=n4jpwd, logger=logger)
 
-
 for repo in repos:
 	r = requests.get('https://api.github.com/repos/mulesoft-labs/' + repo + '/contents/popeye.yaml?access_token=' + githubAccessToken)
 	if r.status_code == 200:
 		data = r.json()['content']
 		yaml_content = yaml.load(base64.b64decode(data))
 		print("Found Popeye Yaml for " + repo)
-        for dependency in yaml_content['require']:
+		for dependency in yaml_content['require']:
 			me = repo
 			print("Found a dependency from " + me + " - " + dependency)
 			persistor.createServiceDependency(me, dependency)
