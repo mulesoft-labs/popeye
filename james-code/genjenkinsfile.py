@@ -86,6 +86,49 @@ class PopEyeGit:
       self.logger.error("Error, unable to merge repo:\n{0}".format(str(e)))
 
 
+
+
+class PopEyeGenJenkins:
+
+  logger = None
+  verbose = False
+  aws_key = None
+  aws_secret = None
+
+  def __init__(self, verbose=False, aws_key=None, aws_secret=None):
+    self.verbose = verbose
+    self.aws_key = aws_key
+    self.aws_secret = aws_secret
+    
+    popLogger = PopEyeLogger(verbose=self.verbose)
+    self.logger = popLogger.createLogger()
+
+    
+  def startSQS(self, sqsQueue):
+
+     poppySQS = PopEyeSQS(aws_key=self.aws_key, aws_secret=self.aws_secret)
+     while True:
+       msgList = poppySQS.fetchFromSQS(sqsQueue)
+       if len(msgList) > 0:
+         # We have had a message come in
+         self.logger.info("Messages have arrived, now need to process")
+         for sqsMsg in msgList:
+           if "Body" in sqsMsg:
+             msgBody = sqsMsg["Body"]
+             msgObj = json.loads(msgBody)
+       time.sleep(1) 
+
+
+
+  def processMessage(self, msgObj):
+    # We take an object and start to process it, defined in jsonformat.txt
+    if "data" in msgObj:
+      msgData = msgObj["data"]
+    if "releasetag" in msgObj:
+      releaseTag = msgObj["releasetag"]
+
+
+
 if __name__ == "__main__":
 
 
