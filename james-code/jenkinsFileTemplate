@@ -1,0 +1,53 @@
+
+
+currentBuild.displayName = jenkinsbuildnumber
+
+def buildJob(job, action) {
+    successVal = true
+    try {
+      stage (action + ' ' +  job.name) {
+        echo "deploying" + job.name
+        sleep job.deploy_time
+        if(!job.deploy_success) {
+            error 'FAIL'
+            successVal = false
+        }
+      }
+    }
+    catch (e) {
+        currentBuild.result = "FAILURE"
+        result = "FAIL"
+    }
+    if(successVal) {
+      try {
+        stage (action + ' test ' +  job.name) {
+          echo "Testing" + job.name
+          sleep job.test_time
+          if(action == "deploy" && !job.test_success) {
+            echo "Stage failed"
+            error 'FAIL'
+            successVal = false
+          }
+        }
+      }
+      catch (e) {
+        currentBuild.result = "FAILURE"
+        result = "FAIL"
+      }
+    }
+}
+
+
+node {
+    for (int j = 0; j < jobs.size() && currentBuild.result == null; j++) {
+      progress = j
+      job = jobs[j]
+      buildJob(job, "deploy")
+      if(currentBuild.result == "FAILURE") {
+        for(int p = j; p >= 0; p--) {
+            rollJob = jobs[p]
+            buildJob(rollJob, "rollback")
+        }
+      }
+    }
+}

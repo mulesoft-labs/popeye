@@ -22,69 +22,7 @@ import git
 import shutil
 
 from PopEyeLogger import PopEyeLogger
-
-
-
-class PopEyeGit:
-
-  logger = None
-  target = None
-  src = None
-
-  def __init__(self, logger, target, src):
-    self.logger = logger
-    self.target = target
-    self.src = src
-
-  
-  # This will clone the repo if it doesn't exist, if it does will pull the repo
-  def cloneRepo(self):
-  
-  
-    # This should be the path to the git file
-    gitFile = os.path.join(target, '.git')
-  
-    if not os.path.isdir(gitFile):
-      if os.path.isdir(target):
-        self.logger.info("About the remove and recreate the clone directory")
-        # directory exists so remove it
-        shutil.rmtree(target)
-        os.mkdirs(target)
-      self.logger.info("About to clone the repo")
-      # Clone the repo
-      Repo.clone_from(self.src, self.target, depth=_repoDepth)
-      self.logger.info("Repo cloning has been completed")
-  
-    # Pull the repo
-    self.pullRepo(self.target, self.src)
-  
-  
-  # This will pull the repo
-  def pullRepo(self, self.target, self.src):
-  
-    global debug
-  
-    try:
-  
-      if debug:
-        print("About to perform a hard reset then a pull")
-      repo = git.Repo(target)
-      # remove any changes that have been made locally
-      repo.git.reset("--hard", "origin/master")
-      o = repo.remotes.origin
-      #o.pull()
-      #o.fetch(depth=_repoDepth)
-      o.fetch()
-      repo.git.merge("origin/master")
-      if debug:
-        self.logger("Pull has been completed")
-  
-    except Exception, e:
-      # Something has happened, unable to merge, send an error email
-      serverHostName = socket.gethostname()
-      errorMsg = str(e)
-      self.logger.error("Error, unable to merge repo:\n{0}".format(str(e)))
-
+from PopEyeGit import PopEyeGit
 
 
 
@@ -126,6 +64,22 @@ class PopEyeGenJenkins:
       msgData = msgObj["data"]
     if "releasetag" in msgObj:
       releaseTag = msgObj["releasetag"]
+
+
+  def buildFile(self, buildNumber, jsonObj):
+    f = open('jenkinsFileTemplate', 'r')
+    jenkinsTemp = f.read()
+
+    w = open('JenkinsFile', 'w')
+    buildLine = "jenkinsbuildnumber = \"" + buildNumber + "\""
+    w.write(buildLine)
+    
+    jsonObjLine = "def jobs = " + jsonObj
+    w.write(jsonObjLine)
+
+    w.write(jenkinsTemp)
+
+    w.close()
 
 
 
