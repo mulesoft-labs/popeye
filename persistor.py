@@ -1,6 +1,5 @@
 #! /usr/bin/env python
 
-#from neo4j.v1 import GraphDatabase
 from neo4jrestclient.client import GraphDatabase
 
 
@@ -9,8 +8,6 @@ class persistor(object):
         url = kwargs['url']
         username = kwargs['username']
         pwd = kwargs['pwd']
-        #n4j = GraphDatabase("http://127.0.0.1:7474", username="neo4j", password="popeye")
-        #db = GraphDatabase("http://localhost:7474", username="neo4j", password="mypassword")
 
         self.n4j = GraphDatabase(url, username=username, password=pwd)
 
@@ -18,21 +15,20 @@ class persistor(object):
         self.logger.debug("Neo4j initialized. url={0} username={1} pwd={2}".format(url, username, pwd))
 
     def createServiceDependency(self, _this, _that):
-        serviceThis = self.n4j.query(q="MERGE (node:artifact {name: '" + _this + "'}) RETURN node")
-        serviceThat = self.n4j.query(q="MERGE (node:artifact {name: '" + _that + "'}) RETURN node")
-        self.n4j.query(q="MATCH (a:artifact), (b:artifact) WHERE a.name='"+_this+"' AND b.name='"+_that+ "' CREATE UNIQUE (b)<-[:dependency_of]->(a)")
-
-        # self.n4j.query(q="MERGE (serviceThis)-[:dependsOn {r:'dependsOn'}]->(serviceThat)")
-        # MERGE (n)-[:know {r:'123'}]->(test2) //Create the relation between these nodes if it does not already exist
-
-        # serviceThis = self.n4j.node(name=_this)
-        # serviceThat = self.n4j.node(name=_dependsOn)
-        # serviceThis.relationships.create("depends_on", serviceThat)
+        self.n4j.query(q="MERGE (node:artifact {name: '" + _this + "'}) RETURN node")
+        self.n4j.query(q="MERGE (node:artifact {name: '" + _that + "'}) RETURN node")
+        self.n4j.query(q="MATCH (a:artifact), (b:artifact) WHERE a.name='"+_this+"' AND b.name='"+_that+ "' CREATE UNIQUE (a)<-[:dependency_of]->(b)")
 
     def clearAllNodes(self):
         self.n4j.query(q="MATCH (n), ()-[r]-() DELETE n,r")
 
+
 #TODO : no circular dependency.
+# self.n4j.query(q="MERGE (serviceThis)-[:dependsOn {r:'dependsOn'}]->(serviceThat)")
+# MERGE (n)-[:know {r:'123'}]->(test2) //Create the relation between these nodes if it does not already exist
+# serviceThis = self.n4j.node(name=_this)
+# serviceThat = self.n4j.node(name=_dependsOn)
+# serviceThis.relationships.create("depends_on", serviceThat)
 #
 #
 #q = 'MATCH (u:User)-[r:likes]->(m:Beer) WHERE u.name="Marco" RETURN u, type(r), m'
