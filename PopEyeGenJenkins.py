@@ -13,6 +13,7 @@ import re
 import traceback
 #import random
 #import requests
+import json
 
 from datetime import datetime
 
@@ -40,7 +41,7 @@ class PopEyeGenJenkins:
   currentDir = None
 
 
-  def __init__(self, environment, targetDir=None, srcRepo=None, verbose=False, aws_key=None, aws_secret=None):
+  def __init__(self, environment, targetDir=None, srcRepo=None, verbose=True, aws_key=None, aws_secret=None):
     self.verbose = verbose
     self.aws_key = aws_key
     self.aws_secret = aws_secret
@@ -107,8 +108,12 @@ class PopEyeGenJenkins:
 
     deployLine = "deployEnv = \"" + self.environment + "\"\n"
     w.write(deployLine)
+
+    jsonObjStr = json.dumps(jsonObj)
+    jsonObjStr = jsonObjStr.replace("{", "[")
+    jsonObjStr = jsonObjStr.replace("}", "]")
     
-    jsonObjLine = "def jobs = " + jsonObj + "\n"
+    jsonObjLine = "def jobs = " + jsonObjStr
     w.write(jsonObjLine)
 
     w.write(jenkinsTemp)
@@ -148,6 +153,7 @@ if __name__ == "__main__":
 
   buildNumber = "PCCR-655"
   jsonObj = '[["name":"core-services","build":1, "deploy_time":1, "test_time":2, "test_success": false, "deploy_success": true],["name":"exchange","build":2, "deploy_time":1, "test_time":2, "test_success": true, "deploy_success": true]]'
+
 
   poppyJenkObj = PopEyeGenJenkins("QAX")  
   poppyJenkObj.startDeploy(buildNumber, jsonObj)
