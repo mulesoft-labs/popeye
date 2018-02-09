@@ -34,7 +34,7 @@ class PopEyeGenJenkins:
   verbose = False
   aws_key = None
   aws_secret = None
-  targetDir = "/Users/jamesnieper/popeye-trigger"
+  targetDir = "/home/ubuntu/popeye-trigger"
   srcRepo = "git@github.com:mulesoft-ops/popeye-trigger.git"
   environment = None
 

@@ -1,4 +1,4 @@
-import json, requests
+import json, requests, subprocess
 
 
 class JiraClient():
@@ -115,7 +115,7 @@ class JiraClient():
     def move_next_stage(self, sid):
         # Fetch ticket status ...
         board_status = self.fetch_ticket_status(sid)
-        print board_status
+        print(board_status)
 
         next_status = self.board_status_to_env[board_status]
 
@@ -143,3 +143,46 @@ class JiraClient():
 
         # Move to next status ...
         requests.post(url, data=json.dumps(payload), headers=headers)
+
+    def description_commit(self):
+        pull = "git pull"
+        diff = "git diff HEAD^ HEAD"
+        processPull = subprocess.Popen(pull.split(), stdout=subprocess.PIPE)
+        output, error = processPull.communicate()
+        if (error is None):
+            processDiff = subprocess.Popen(diff.split(), stdout=subprocess.PIPE)
+            output, error = processDiff.communicate()
+            if (error is None):
+                return str(output)
+            else:
+                print
+                str(error)
+        else:
+            print
+            str(error)
+
+    def create_subtask(self, summary, description):
+        project = input("Enter project: ")
+        issue = input("Enter MBI: ")
+        payload = {
+            "fields":
+                {
+                    "project":
+                        {
+                            "key": project
+                        },
+                    "parent":
+                        {
+                            "key": issue
+                        },
+                    "summary": summary,
+                    "description": description,
+                    "issuetype":
+                        {
+                            "name": "Sub-task"
+                        }
+                }
+        }
+        headers = self.build_headers()
+        url = 'https://www.mulesoft.org/jira/rest/api/2/issue/'
+        r = requests.post(url, data=json.dumps(payload), headers=headers)
