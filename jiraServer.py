@@ -1,4 +1,4 @@
-from flask import Flask, request, abort, jsonify
+from flask import Flask, jsonify
 from JiraClient import JiraClient
 import json
 
@@ -15,6 +15,11 @@ def getMbis():
 def getSpecificMbi(mbiID):
     artifact = client.story_to_deployment_unit(mbiID)
     return jsonify(artifact.get('artifacts'))
+
+@application.route('/mbis/<id>/nextStage', methods=['PUT'])
+def moveMbi(id):
+    client.move_next_stage(id)
+    return "done"
 
 if __name__ == '__main__':
     application.run(host='0.0.0.0', port=8080, debug=False)
