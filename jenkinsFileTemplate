@@ -81,6 +81,13 @@ node {
       slackSend channel: "#popeye-notifications", message: messageCont
     }
     else {
+      try {
+        jiraURL = "http://ec2-174-129-177-255.compute-1.amazonaws.com/mbis/' + jenkinsbuildnumber + '/nextStage'
+        repsonse = httpRequest url: jiraURL, httpMode: 'PUT'
+      }
+      catch(e) {
+        echo "Unable to update Jira"
+      }
       messageCont = ":heart:Successful deployment for: " + jenkinsbuildnumber + " into env: " + deployEnv
       slackSend channel: "#popeye-notifications", message: messageCont
     }
