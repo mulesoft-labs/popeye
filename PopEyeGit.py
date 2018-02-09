@@ -1,28 +1,12 @@
 #!/usr/bin/python
 
-import sys
-import time
 import os
-import platform
-import subprocess
-from socket import socket
-import urllib2
-from optparse import OptionParser
-import ast
-import re
-import traceback
-#import random
-#import requests
-
-import socket
-
-from git import Repo
-import git
-
 import shutil
+import socket
+from socket import socket
 
-from PopEyeLogger import PopEyeLogger
-
+import git
+from git import Repo
 
 
 class PopEyeGit:
