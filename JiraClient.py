@@ -22,7 +22,7 @@ class JiraClient():
 
     def fetch_tickets_to_deploy(self):
         payload = {
-            "jql": "project = HX AND issuetype = Story AND status in (\"Ready to Deploy\", \"StgX Done\", \"QAX Done\", \"Prod EU Done\")",
+            "jql": "project = MBI AND issuetype = Story AND status in (\"Ready to Deploy\", \"StgX Done\", \"QAX Done\", \"Prod EU Done\")",
             "fields": ["summary"]}
         headers = self.build_headers()
         url = 'https://www.mulesoft.org/jira/rest/api/2/search'
@@ -101,7 +101,7 @@ class JiraClient():
 
     def fetch_stories(self):
         payload = {
-            "jql": "project = HX AND issuetype = Story",
+            "jql": "project = MBI AND issuetype = Story",
             "fields": ["summary"]}
         headers = self.build_headers()
         url = 'https://www.mulesoft.org/jira/rest/api/2/search'
