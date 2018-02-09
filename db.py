@@ -27,13 +27,10 @@ class db(object):
             self.n4j.query(q="MERGE (node:artifact {name: '" + _this_name + "'}) set node.smoke_build='" + _this[
                 'smoke_build'] + "' RETURN node")
         if _that:
-            if 'name' in _that:
-                name = _that['name']
-            else:
-                name = _that
-
-            self.n4j.query(q="MERGE (node:artifact {name: '" +name + "'}) RETURN node")
-            self.n4j.query(q="MATCH (a:artifact), (b:artifact) WHERE a.name='"+_this_name+"' AND b.name='"+name+ "' CREATE UNIQUE (a)<-[:dependency_of]-(b)")
+            name = _that['name'] if 'name' in _that else _that
+            version = _that['version'] if 'version' in _that else "UNKNOWN"
+            self.n4j.query(q="MERGE (node:artifact {name: '" + name + "'}) RETURN node")
+            self.n4j.query(q="MATCH (a:artifact), (b:artifact) WHERE a.name='"+_this_name+"' AND b.name='"+name+ "' CREATE UNIQUE (a)<-[r:dependency_of]-(b) SET r.version='"+version+"'")
             self.logger.info("inserted relation into db.({})<-dependency_of-({})".format(_this_name, name))
 
     def clearAllNodes(self):
@@ -80,6 +77,10 @@ class db(object):
         result = self.n4j.query(q="match(n) where n.name=\'" + str(artifact) + "\' return n.deploy_build")
         return result[0][0]
 
+    def getDependencyVersion(self, _this, _that):
+        #_this----dependency_of--->_that
+        result = self.n4j.query(q="match (n:artifact {name:'"+_this+"'})-[r]->(m:artifact {name:'"+_that+"'})  return r.version;")
+        return result[0][0]
 
 #TODO : no circular dependency.
 # self.n4j.query(q="MERGE (serviceThis)-[:dependsOn {r:'dependsOn'}]->(serviceThat)")

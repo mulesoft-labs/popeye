@@ -9,7 +9,6 @@ from db import db
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%b/%d/%Y %H:%M:%S %Z',
 					level=logging.INFO)
-
 parser = argparse.ArgumentParser()
 parser.add_argument("-gt", "--githubAccessToken", required=True)
 parser.add_argument("-nl", "--n4jUrl", required=True)
