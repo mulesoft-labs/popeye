@@ -41,11 +41,11 @@ def buildJob(job, action) {
         stage (action + ' test ' +  job.artifact_id) {
           echo "Testing" + job.artifact_id
           smokeBuild = job.smokeBuild
-          node {
+          //node {
             echo "About to run external smoke test job: " + smokeBuild
             build job: smokeBuild
             echo "Ran external smoke test job: " + smokeBuild
-          }
+          //}
           //sleep job.test_time
           if(action == "deploy" && !job.test_success) {
             echo "Stage failed"
