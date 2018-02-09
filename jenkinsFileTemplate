@@ -8,12 +8,16 @@ def buildJob(job, action) {
       stage (action + ' ' +  job.artifact_id) {
         echo "deploying" + job.artifact_id
         sleep job.deploy_time
-        slackSend channel: "#popeye-notifications", message: action + " " + job.artifact_id
 
         if(!job.deploy_success) {
             error 'FAIL'
             successVal = false
-            slackSend channel: "#popeye-notifications", message: action + " " + job.artifact_id + " FAILED"
+            messageCont = ":x:FAILED " + action + " for: " + job.artifact_id + " into env: " + deployEnv
+            slackSend channel: "#popeye-notifications", message: messageCont
+        }
+        else {
+          messageCont = ":peach:Succesful " + action + " for: " + job.artifact_id + "into env: " + deployEnv
+          slackSend channel: "#popeye-notifications", message: messageCont
         }
       }
     }
@@ -30,7 +34,12 @@ def buildJob(job, action) {
             echo "Stage failed"
             error 'FAIL'
             successVal = false
-            slackSend channel: "#popeye-notifications", message: action + " " + job.artifact_id + " FAILED"
+            messageCont = ":x:FAILED " + action + " test for: " + job.artifact_id + " into env: " + deployEnv
+            slackSend channel: "#popeye-notifications", message: messageCont
+          }
+          else {
+            messageCont = ":strawberry:Succesful " + action + " test for: " + job.artifact_id + "into env: " + deployEnv
+            slackSend channel: "#popeye-notifications", message: messageCont
           }
         }
       }
@@ -56,8 +65,12 @@ node {
     }
 
     if(currentBuild.result == "FAILURE") {
-      messageCont = "Deployment for ticket " + jenkinsbuildnumber + " FAILED"
-      slackSend channel: "#popeye-notifications", message: action + " " + job.artifact_id + " FAILED"
+      messageCont = ":x:Failed deployment for ticket " + jenkinsbuildnumber + " into env: " + deployEnv
+      slackSend channel: "#popeye-notifications", message: messageCont
+    }
+    else {
+      messageCont = ":heart:Successful deployment for: " + jenkinsbuildnumber + " into env: " + deployEnv
+      slackSend channel: "#popeye-notifications", message: messageCont
     }
 
 }
