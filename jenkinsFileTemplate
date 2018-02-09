@@ -69,7 +69,7 @@ def buildJob(job, action) {
 }
 
 
-node {
+node('popeye') {
     for (int j = 0; j < jobs.size() && currentBuild.result == null; j++) {
       progress = j
       job = jobs[j]
