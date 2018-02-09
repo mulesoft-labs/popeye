@@ -48,6 +48,19 @@ class db(object):
                 graph[node].append(dependsOnNode)
 	return graph
 
+    def getGraph2(self):
+        graph={}
+        for tuple in self.n4j.query(q='MATCH (n)-[r]->(m) RETURN n.name,m.name').elements:
+            node = tuple[0]
+            dependsOnNode = tuple[1]
+            if node not in graph:
+                graph[node] = []
+            if dependsOnNode not in graph:
+                graph[dependsOnNode] = []
+            if node not in graph[dependsOnNode]:
+                graph[dependsOnNode].append(node)
+        return graph
+
     def queryNodesInTopologicalOrder(self):
         graph = self.getGraph()
         in_degree = { u : 0 for u in graph }     # determine in-degree
