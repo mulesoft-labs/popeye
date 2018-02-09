@@ -5,15 +5,15 @@ currentBuild.displayName = jenkinsbuildnumber + " - " + deployEnv
 def buildJob(job, action) {
     successVal = true
     try {
-      stage (action + ' ' +  job.name) {
-        echo "deploying" + job.name
+      stage (action + ' ' +  job.artifact_id) {
+        echo "deploying" + job.artifact_id
         sleep job.deploy_time
-        slackSend channel: "#popeye-notifications", message: action + " " + job.name
+        slackSend channel: "#popeye-notifications", message: action + " " + job.artifact_id
 
         if(!job.deploy_success) {
             error 'FAIL'
             successVal = false
-            slackSend channel: "#popeye-notifications", message: action + " " + job.name + " FAILED"
+            slackSend channel: "#popeye-notifications", message: action + " " + job.artifact_id + " FAILED"
         }
       }
     }
@@ -23,14 +23,14 @@ def buildJob(job, action) {
     }
     if(successVal) {
       try {
-        stage (action + ' test ' +  job.name) {
-          echo "Testing" + job.name
+        stage (action + ' test ' +  job.artifact_id) {
+          echo "Testing" + job.artifact_id
           sleep job.test_time
           if(action == "deploy" && !job.test_success) {
             echo "Stage failed"
             error 'FAIL'
             successVal = false
-            slackSend channel: "#popeye-notifications", message: action + " " + job.name + " FAILED"
+            slackSend channel: "#popeye-notifications", message: action + " " + job.artifact_id + " FAILED"
           }
         }
       }
@@ -57,7 +57,7 @@ node {
 
     if(currentBuild.result == "FAILURE") {
       messageCont = "Deployment for ticket " + jenkinsbuildnumber + " FAILED"
-      slackSend channel: "#popeye-notifications", message: action + " " + job.name + " FAILED"
+      slackSend channel: "#popeye-notifications", message: action + " " + job.artifact_id + " FAILED"
     }
 
 }
