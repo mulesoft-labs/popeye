@@ -90,8 +90,8 @@ def generateDeploymentOrder(order, deployableComponents):
 def invokeDeploymentPipeline(order, deployableComponents):
 	for deployableComponent in deployableComponents:
 		deploymentOrder = generateDeploymentOrder(order, deployableComponent['artifacts'])
-		#poppyJenkObj = PopEyeGenJenkins(deployableComponent['env'])
-		#poppyJenkObj.startDeploy(deployableComponent['jira_key'], jsonObj)
+		poppyJenkObj = PopEyeGenJenkins(deployableComponent['env'])
+		poppyJenkObj.startDeploy(deployableComponent['jira_key'], deploymentOrder)
 		print deployableComponent['jira_key']
 		print deployableComponent['env']
 		print deploymentOrder
