@@ -37,6 +37,7 @@ class PopEyeGenJenkins:
   targetDir = "/home/ubuntu/popeye-trigger"
   srcRepo = "git@github.com:mulesoft-ops/popeye-trigger.git"
   environment = None
+  currentDir = None
 
 
   def __init__(self, environment, targetDir=None, srcRepo=None, verbose=False, aws_key=None, aws_secret=None):
@@ -49,6 +50,8 @@ class PopEyeGenJenkins:
       self.srcRepo = srcRepo
 
     self.environment = environment
+
+    self.currentDir = dir_path = os.path.dirname(os.path.realpath(__file__))
     
     popLogger = PopEyeLogger(verbose=self.verbose)
     self.logger = popLogger.createLogger()
@@ -89,7 +92,9 @@ class PopEyeGenJenkins:
 
   def buildFile(self, buildNumber, jsonObj):
     jenkinsFilePath = os.path.join(self.targetDir, "Jenkinsfile")
-    f = open('jenkinsFileTemplate', 'r')
+
+    jenkinsTempPath = os.path.join(self.currentDir, 'jenkinsFileTemplate')
+    f = open(jenkinsTempPath, 'r')
     jenkinsTemp = f.read()
 
     w = open(jenkinsFilePath, 'w')
