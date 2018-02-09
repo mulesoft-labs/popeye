@@ -36,7 +36,7 @@ class db(object):
     def clearAllNodes(self):
         self.n4j.query(q="MATCH (n), ()-[r]-() DELETE n,r")
 
-    def queryNodesInTopologicalOrder(self):
+    def getGraph(self):
         graph={}
         for tuple in self.n4j.query(q='MATCH (n)-[r]->(m) RETURN n.name,m.name').elements:
             node = tuple[0]
@@ -47,7 +47,10 @@ class db(object):
                 graph[dependsOnNode] = []
             if dependsOnNode not in graph[node]:
                 graph[node].append(dependsOnNode)
+	return graph
 
+    def queryNodesInTopologicalOrder(self):
+        graph = self.getGraph()
         in_degree = { u : 0 for u in graph }     # determine in-degree
         for u in graph:                          # of each node
             for v in graph[u]:
@@ -80,6 +83,10 @@ class db(object):
     def getDependencyVersion(self, _this, _that):
         #_this----dependency_of--->_that
         result = self.n4j.query(q="match (n:artifact {name:'"+_this+"'})-[r]->(m:artifact {name:'"+_that+"'})  return r.version;")
+        return result[0][0]
+
+    def getSmokeBuild(self, artifact):
+        result = self.n4j.query(q="match(n) where n.name=\'" + str(artifact) + "\' return n.smoke_build")
         return result[0][0]
 
 #TODO : no circular dependency.
