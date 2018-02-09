@@ -20,7 +20,7 @@ class persistor(object):
     def createServiceDependency(self, _this, _that):
         serviceThis = self.n4j.query(q="MERGE (node:artifact {name: '" + _this + "'}) RETURN node")
         serviceThat = self.n4j.query(q="MERGE (node:artifact {name: '" + _that + "'}) RETURN node")
-        self.n4j.query(q="MATCH (a:artifact), (b:artifact) WHERE a.name='"+_this+"' AND b.name='"+_that+ "' CREATE UNIQUE (a)-[:depends]->(b)")
+        self.n4j.query(q="MATCH (a:artifact), (b:artifact) WHERE a.name='"+_this+"' AND b.name='"+_that+ "' CREATE UNIQUE (b)<-[:dependency_of]->(a)")
 
         # self.n4j.query(q="MERGE (serviceThis)-[:dependsOn {r:'dependsOn'}]->(serviceThat)")
         # MERGE (n)-[:know {r:'123'}]->(test2) //Create the relation between these nodes if it does not already exist
