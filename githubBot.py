@@ -1,8 +1,8 @@
 import requests
 import base64
 import yaml
-import sys
 import logging
+import argparse
 
 from persistor import persistor
 
@@ -23,15 +23,17 @@ def writeAdjacencyListToFile():
 		f.write(node + " " + ','.join(adjacencyList[node]) + '\n')
 	f.close()
 
-if len(sys.argv) != 5:
-    print "Github bot not invoked correctly. Need github Access Token"
-    sys.exit()
-
+parser = argparse.ArgumentParser()
+parser.add_argument("-gt", "--githubAccessToken", required=True)
+parser.add_argument("-nl", "--n4jUrl", required=True)
+parser.add_argument("-nu", "--n4jUser", required=True)
+parser.add_argument("-np", "--n4jpwd", required=True)
+args = parser.parse_args()
+githubAccessToken = args.githubAccessToken
+n4jUrl = args.n4jUrl
+n4jUser = args.n4jUser
+n4jpwd = args.n4jpwd
 adjacencyList = {}
-githubAccessToken = sys.argv[1]
-n4jUrl = sys.argv[2]
-n4jUser = sys.argv[3]
-n4jpwd = sys.argv[4]
 repos = ['popeye_appviz', 'popeye_appviz_ui', 'popeye_cloudhub_platform', 'popeye_coreservices', 'popeye_exchange', 'popeye_anypoint_ui']
 persistor = persistor(url=n4jUrl, username=n4jUser, pwd=n4jpwd, logger=logger)
 

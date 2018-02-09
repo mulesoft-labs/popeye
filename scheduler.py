@@ -1,4 +1,18 @@
 from collections import deque
+import JiraClient
+from neo4jrestclient.client import GraphDatabase
+import time
+import argparse
+import random
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-jt", "--jiraAccessToken", required=True)
+parser.add_argument("-nl", "--n4jUrl", required=True)
+parser.add_argument("-nu", "--n4jUser", required=True)
+parser.add_argument("-np", "--n4jpwd", required=True)
+args = parser.parse_args()
+gdb = GraphDatabase(args.n4jUrl, username=args.n4jUser, password=args.n4jpwd)
+jiraAccessToken = args.jiraAccessToken
 
 def getGraph():
 	adjacencyList = {}
@@ -40,14 +54,35 @@ def kahn_topsort(graph):
         return []            # then return an empty list
 
 def getDeployableComponents():
-	components = []
-	components.append({'artifact_name':'popeye_appviz', 'artifact_version':'1.0'})
-	components.append({'artifact_name':'popeye_coreservices', 'artifact_version':'1.7'})
-	components.append({'artifact_name':'popeye_anypoint_ui', 'artifact_version':'0.8'})
-	components.append({'artifact_name':'popeye_cloudhub_platform', 'artifact_version':'2.1'})
-	return components
+	token = jiraAccessToken
+	client = JiraClient.JiraClient(token)
+	deployTickets = client.fetch_artifacts(time.strftime("%Y-%m-%d"))
+	deployableComponents = []
+	for ticket in deployTickets:
+		for artifact in ticket['artifacts']:
+			artifact['jira_key'] = ticket['jira_key']
+			artifact['env'] = ticket['next_env_to_deploy']
+			artifact['deploy_time'] = random.randint(1,10)
+			artifact['test_time'] = random.randint(1,10)
+			artifact['deploy_success'] = True
+			artifact['test_success'] = True
+			deployableComponents.append(artifact)
+	return deployableComponents
 
-def generateDeploymentOrder
+def generateDeploymentOrder(order, deployableComponents):
+	artifactComponentMap = {}
+	for component in deployableComponents:
+		artifactComponentMap[str(component['artifact_id'])] = component
+	deploymentOrder = []
+	for artifact in order:
+		if artifact in artifactComponentMap:
+			query = "match(n) where n.name=\'" + str(artifact) + "\' return n.deploy_build"
+			result = gdb.query(query)
+			artifactComponentMap[artifact]['deployBuild'] = str(result[0][0])
+			deploymentOrder.append(artifactComponentMap[artifact])
+	return deploymentOrder
+
 order = kahn_topsort(getGraph())
 componentsToBeDeployed = getDeployableComponents()
-print generateDeploymentOrder(order, componentsToBeDeployed)
+deploymentOrder = generateDeploymentOrder(order, componentsToBeDeployed)
+print deploymentOrder

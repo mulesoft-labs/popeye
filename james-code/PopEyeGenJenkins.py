@@ -14,6 +14,8 @@ import traceback
 #import random
 #import requests
 
+from datetime import datetime
+
 import socket
 
 from git import Repo
@@ -91,6 +93,10 @@ class PopEyeGenJenkins:
     jenkinsTemp = f.read()
 
     w = open(jenkinsFilePath, 'w')
+
+    dateLine = "// " + str(datetime.now()) + "\n\n"
+    w.write(dateLine)
+
     buildLine = "jenkinsbuildnumber = \"" + buildNumber + "\"\n"
     w.write(buildLine)
 
