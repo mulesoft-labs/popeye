@@ -82,6 +82,24 @@ class PopEyeGit:
 
   def commitPushRepo(self):
     self.logger.info("Need to commit the repo")
+    repo = git.Repo(self.target)
+    o = repo.remotes.origin
+
+    file_list = [ 'Jenkinsfile' ]
+    repo.index.add(file_list)
+    repo.index.commit("update Jenkinsfile")
+
+    try:
+      self.logger.info("About to push")
+      # remove any changes that have been made locally
+      o.push()
+      self.logger.info("Push has been completed")
+
+    except Exception, e:
+      # Something has happened, unable to merge, send an error email
+      serverHostName = socket.gethostname()
+      errorMsg = str(e)
+      self.logger.error("Error, unable to push:\n{0}".format(str(e)))
 
 
 
