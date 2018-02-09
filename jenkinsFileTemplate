@@ -9,11 +9,11 @@ def buildJob(job, action) {
         echo "deploying" + job.artifact_id
         //sleep job.deploy_time
         deployBuild = job.deployBuild
-        node {
+        //node {
           echo "About to build external deploy job: " + deployBuild
           build job: deployBuild
           echo "Ran external deploy job: " + deployBuild
-        }
+        //}
 
         if(!job.deploy_success) {
             error 'FAIL'
@@ -75,9 +75,9 @@ node {
         }
       }
     }
-}
+//}
 
-node {
+//node {
     if(currentBuild.result == "FAILURE") {
       messageCont = ":x:Failed deployment for ticket " + jenkinsbuildnumber + " into env: " + deployEnv
       slackSend channel: "#popeye-notifications", message: messageCont
