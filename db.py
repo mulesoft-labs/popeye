@@ -4,7 +4,6 @@ from neo4jrestclient.client import GraphDatabase
 from collections import deque
 
 
-
 class db(object):
     def __init__(self, **kwargs):
         url = kwargs['url']

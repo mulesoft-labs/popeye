@@ -2,8 +2,11 @@ from flask import Flask, jsonify
 from JiraClient import JiraClient
 import json
 
+from scheduler import scheduler
+
 application = Flask(__name__)
 client = JiraClient("aGFja3gudXNlcjpoYWNreC51c2VyTXVsZTE =")
+scheduler = scheduler(url="http://127.0.0.1:7474", username="neo4j", pwd="popeye", jiraAccessToken="aGFja3gudXNlcjpoYWNreC51c2VyTXVsZTE =")
 
 @application.route('/mbis/', methods=['GET'])
 def getMbis():
@@ -19,6 +22,11 @@ def getSpecificMbi(mbiID):
 @application.route('/mbis/<id>/nextStage', methods=['PUT'])
 def moveMbi(id):
     client.move_next_stage(id)
+    return "done"
+
+@application.route('/scheduler', methods=['POST'])
+def scheduler():
+    scheduler.invokeDeploymentPipeline()
     return "done"
 
 if __name__ == '__main__':
