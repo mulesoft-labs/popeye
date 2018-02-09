@@ -32,14 +32,21 @@ class PopEyeGenJenkins:
   verbose = False
   aws_key = None
   aws_secret = None
-  targetDir = "/Users/jamesnieper/popeye-build"
-  srcRepo = ""
+  targetDir = "/Users/jamesnieper/popeye-trigger"
+  srcRepo = "git@github.com:mulesoft-ops/popeye-trigger.git"
+  environment = None
 
 
-  def __init__(self, verbose=False, aws_key=None, aws_secret=None):
+  def __init__(self, environment, targetDir=None, srcRepo=None, verbose=False, aws_key=None, aws_secret=None):
     self.verbose = verbose
     self.aws_key = aws_key
     self.aws_secret = aws_secret
+    if targetDir is not None:
+      self.targetDir = targetDir
+    if srcRepo is not None:
+      self.srcRepo = srcRepo
+
+    self.environment = environment
     
     popLogger = PopEyeLogger(verbose=self.verbose)
     self.logger = popLogger.createLogger()
@@ -75,7 +82,7 @@ class PopEyeGenJenkins:
 
     self.buildFile(buildNumber, jsonObj)
 
-    commitPushRepo()
+    poppyGitObj.commitPushRepo()
 
 
   def buildFile(self, buildNumber, jsonObj):
@@ -84,10 +91,13 @@ class PopEyeGenJenkins:
     jenkinsTemp = f.read()
 
     w = open(jenkinsFilePath, 'w')
-    buildLine = "jenkinsbuildnumber = \"" + buildNumber + "\""
+    buildLine = "jenkinsbuildnumber = \"" + buildNumber + "\"\n"
     w.write(buildLine)
+
+    deployLine = "deployEnv = \"" + self.environment + "\"\n"
+    w.write(deployLine)
     
-    jsonObjLine = "def jobs = " + jsonObj
+    jsonObjLine = "def jobs = " + jsonObj + "\n"
     w.write(jsonObjLine)
 
     w.write(jenkinsTemp)
@@ -113,6 +123,7 @@ if __name__ == "__main__":
   verbose = options.verbose
 
 
+  '''
   if src is None:
     print("Error, repo must be specified with -s or --src")
     parser.print_help()
@@ -122,17 +133,12 @@ if __name__ == "__main__":
     print("Error, target local directory must be sepecified with -t or --target")
     parser.print_help()
     sys.exit()
+  '''
 
+  buildNumber = "PCCR-655"
+  jsonObj = '[["name":"core-services","build":1, "deploy_time":1, "test_time":2, "test_success": false, "deploy_success": true],["name":"exchange","build":2, "deploy_time":1, "test_time":2, "test_success": true, "deploy_success": true]]'
 
-  # This should be the path to the git file
-  gitFile = os.path.join(target, '.git')
-  
-  # Always run a clone the repo when we first start the app to ensure the repo is there and up-to-date
-  cloneRepo(target, src)
-
-  # Start the timer
-  startTimer(target, src)
-
-  
+  poppyJenkObj = PopEyeGenJenkins("QAX")  
+  poppyJenkObj.startDeploy(buildNumber, jsonObj)
 
 
