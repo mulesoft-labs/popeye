@@ -55,7 +55,7 @@ class JiraClient():
 
         # Fetch version ...
         version = ticket_info["fields"]["versions"]
-        if len(version) ==0:
+        if len(version) == 0:
             raise ValueError(sid + " must have version defined")
         artifact_version = version[0]["name"]
 
@@ -63,7 +63,6 @@ class JiraClient():
             raise ValueError(sid + " must have version defined")
 
         jira_key = ticket_info["key"]
-
 
         return {"jira_key": jira_key, "artifact_id": artifact_id, "version": artifact_version}
 
@@ -89,10 +88,6 @@ class JiraClient():
 
         return {"jira_key": story_key, "next_env_to_deploy": next_env, "artifacts": artifacts}
 
-    def move_next_stage(self, id):
-        status = self.fetch_ticket_status(id)
-        print(status)
-
     def fetch_ticket_status(self, id):
         # Fetch ticket info ...
         ticket_info = self.fetch_ticket_info(id)
@@ -103,6 +98,19 @@ class JiraClient():
     def fetch_next_env_to_deploy(self, sid):
         board_status = self.fetch_ticket_status(sid)
         return self.board_status_to_env[board_status]
+
+    def fetch_stories(self):
+        payload = {
+            "jql": "project = HX AND issuetype = Story",
+            "fields": ["summary"]}
+        headers = self.build_headers()
+        url = 'https://www.mulesoft.org/jira/rest/api/2/search'
+        r = requests.post(url, data=json.dumps(payload), headers=headers)
+
+        # Filter only the tickets required for the current deploy date...
+        issues = r.json()['issues']
+        return list(map(lambda x: x["key"], issues))
+
 
     def move_next_stage(self, sid):
         # Fetch ticket status ...
