@@ -18,21 +18,17 @@ parser.add_argument("-np", "--n4jpwd", required=True)
 args = parser.parse_args()
 
 
-
-
-
 class scheduler(object):
 	def __init__(self, **kwargs):
 		url = kwargs['url']
 		username = kwargs['username']
 		pwd = kwargs['pwd']
 		self.db = db(url=url, username=username, pwd=pwd, logger=logger)
-		self.jiraAccessToken = kwargs['jiraAccessToken']
+		self.client = JiraClient.JiraClient(kwargs['jiraAccessToken'])
 		logger.debug("scheduler initialized. url={0} username={1} pwd={2}".format(url, username, pwd))
 
 	def getDeployableComponents(self):
-		client = JiraClient.JiraClient(self.jiraAccessToken)
-		deployTickets = client.fetch_artifacts(time.strftime("%Y-%m-%d"))
+		deployTickets = self.client.fetch_artifacts(time.strftime("%Y-%m-%d"))
 		deployableComponents = []
 		for ticket in deployTickets:
 			deployableComponent = {}
@@ -57,6 +53,15 @@ class scheduler(object):
 		deploymentOrder = []
 		for artifact in order:
 			if artifact in artifactComponentMap:
+				requestedVersion = artifactComponentMap[artifact]['version']
+				for dependentArtifact in graph[artifact]:
+					if dependentArtifact in artifactComponentMap.keys():
+						dependentVersion = self.db.getDependencyVersion(artifact, dependentArtifact)
+						if requestedVersion != dependentVersion:
+							comment = str(artifactComponentMap[artifact]['jira_key']) + ": Unable to continue deploy. Version of " + str(artifact) + " is not compatible for this release"
+							print comment
+							self.client.update_comment(artifactComponentMap[artifact]['jira_key'], comment)
+							return None
 				artifactComponentMap[artifact]['deployBuild'] = str(self.db.getDeployBuild(artifact))
 				artifactComponentMap[artifact]['smokeBuild'] = str(self.db.getSmokeBuild(artifact))
 				deploymentOrder.append(artifactComponentMap[artifact])
@@ -66,11 +71,12 @@ class scheduler(object):
 		order = self.db.queryNodesInTopologicalOrder()
 		for deployableComponent in self.getDeployableComponents():
 			deploymentOrder = self.generateDeploymentOrder(order, deployableComponent['artifacts'])
-			poppyJenkObj = PopEyeGenJenkins(deployableComponent['env'])
-			poppyJenkObj.startDeploy(deployableComponent['jira_key'], deploymentOrder)
-			print deployableComponent['jira_key']
-			print deployableComponent['env']
-			print deploymentOrder
+			if deploymentOrder is not None:
+				poppyJenkObj = PopEyeGenJenkins(deployableComponent['env'])
+				poppyJenkObj.startDeploy(deployableComponent['jira_key'], deploymentOrder)
+				print deployableComponent['jira_key']
+				print deployableComponent['env']
+				print deploymentOrder
 
 
 if __name__ == '__main__':
