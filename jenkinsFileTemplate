@@ -28,6 +28,8 @@ def buildJob(job, action) {
       }
     }
     catch (e) {
+        echo "EXCEPTION with deployment " + deployEnv
+        error 'FAIL'
         successVal = false
         currentBuild.result = "FAILURE"
         result = "FAIL"
@@ -59,6 +61,7 @@ def buildJob(job, action) {
         }
       }
       catch (e) {
+        echo "EXCEPTION with test " + deployEnv
         currentBuild.result = "FAILURE"
         result = "FAIL"
       }
