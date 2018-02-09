@@ -8,5 +8,5 @@ logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', datefmt=
 
 db = db(url="http://127.0.0.1:7474", username="neo4j", pwd="popeye", logger=logger)
 
-res = db.queryNodesInTopologicalOrder()
+res = db.getDependencyVersion("coreservices", "exchange")
 logger.info(res)
