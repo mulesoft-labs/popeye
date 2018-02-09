@@ -13,6 +13,7 @@ import re
 import traceback
 #import random
 #import requests
+import json
 
 from datetime import datetime
 
@@ -34,12 +35,13 @@ class PopEyeGenJenkins:
   verbose = False
   aws_key = None
   aws_secret = None
-  targetDir = "/Users/jamesnieper/popeye-trigger"
+  targetDir = "/home/ubuntu/popeye-trigger"
   srcRepo = "git@github.com:mulesoft-ops/popeye-trigger.git"
   environment = None
+  currentDir = None
 
 
-  def __init__(self, environment, targetDir=None, srcRepo=None, verbose=False, aws_key=None, aws_secret=None):
+  def __init__(self, environment, targetDir=None, srcRepo=None, verbose=True, aws_key=None, aws_secret=None):
     self.verbose = verbose
     self.aws_key = aws_key
     self.aws_secret = aws_secret
@@ -49,6 +51,8 @@ class PopEyeGenJenkins:
       self.srcRepo = srcRepo
 
     self.environment = environment
+
+    self.currentDir = dir_path = os.path.dirname(os.path.realpath(__file__))
     
     popLogger = PopEyeLogger(verbose=self.verbose)
     self.logger = popLogger.createLogger()
@@ -89,7 +93,9 @@ class PopEyeGenJenkins:
 
   def buildFile(self, buildNumber, jsonObj):
     jenkinsFilePath = os.path.join(self.targetDir, "Jenkinsfile")
-    f = open('jenkinsFileTemplate', 'r')
+
+    jenkinsTempPath = os.path.join(self.currentDir, 'jenkinsFileTemplate')
+    f = open(jenkinsTempPath, 'r')
     jenkinsTemp = f.read()
 
     w = open(jenkinsFilePath, 'w')
@@ -102,8 +108,12 @@ class PopEyeGenJenkins:
 
     deployLine = "deployEnv = \"" + self.environment + "\"\n"
     w.write(deployLine)
+
+    jsonObjStr = json.dumps(jsonObj)
+    jsonObjStr = jsonObjStr.replace("{", "[")
+    jsonObjStr = jsonObjStr.replace("}", "]")
     
-    jsonObjLine = "def jobs = " + jsonObj + "\n"
+    jsonObjLine = "def jobs = " + jsonObjStr
     w.write(jsonObjLine)
 
     w.write(jenkinsTemp)
@@ -143,6 +153,7 @@ if __name__ == "__main__":
 
   buildNumber = "PCCR-655"
   jsonObj = '[["name":"core-services","build":1, "deploy_time":1, "test_time":2, "test_success": false, "deploy_success": true],["name":"exchange","build":2, "deploy_time":1, "test_time":2, "test_success": true, "deploy_success": true]]'
+
 
   poppyJenkObj = PopEyeGenJenkins("QAX")  
   poppyJenkObj.startDeploy(buildNumber, jsonObj)
