@@ -28,8 +28,11 @@ def buildJob(job, action) {
       }
     }
     catch (e) {
+        successVal = false
         currentBuild.result = "FAILURE"
         result = "FAIL"
+        messageCont = ":x:FAILED " + action + " for: " + job.artifact_id + " into env: " + deployEnv
+        slackSend channel: "#popeye-notifications", message: messageCont
     }
     if(successVal) {
       try {
