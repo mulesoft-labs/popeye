@@ -56,16 +56,16 @@ class PopEyeGit:
       self.logger.info("Repo cloning has been completed")
   
     # Pull the repo
-    self.pullRepo(self.target, self.src)
+    self.pullRepo()
   
   
   # This will pull the repo
-  def pullRepo(self, self.target, self.src):
+  def pullRepo(self):
   
     try:
   
       self.logger.info("About to perform a hard reset then a pull")
-      repo = git.Repo(target)
+      repo = git.Repo(self.target)
       # remove any changes that have been made locally
       repo.git.reset("--hard", "origin/master")
       o = repo.remotes.origin
@@ -80,7 +80,7 @@ class PopEyeGit:
       self.logger.error("Error, unable to merge repo:\n{0}".format(str(e)))
 
 
-  def commitRepo(self):
+  def commitPushRepo(self):
     self.logger.info("Need to commit the repo")
 
 

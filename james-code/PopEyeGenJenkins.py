@@ -32,6 +32,9 @@ class PopEyeGenJenkins:
   verbose = False
   aws_key = None
   aws_secret = None
+  targetDir = "/Users/jamesnieper/popeye-build"
+  srcRepo = ""
+
 
   def __init__(self, verbose=False, aws_key=None, aws_secret=None):
     self.verbose = verbose
@@ -66,11 +69,21 @@ class PopEyeGenJenkins:
       releaseTag = msgObj["releasetag"]
 
 
+  def startDeploy(self, buildNumber, jsonObj):
+    poppyGitObj = PopEyeGit(self.logger, self.targetDir, self.srcRepo)
+    poppyGitObj.cloneRepo()
+
+    self.buildFile(buildNumber, jsonObj)
+
+    commitPushRepo()
+
+
   def buildFile(self, buildNumber, jsonObj):
+    jenkinsFilePath = os.path.join(self.targetDir, "Jenkinsfile")
     f = open('jenkinsFileTemplate', 'r')
     jenkinsTemp = f.read()
 
-    w = open('JenkinsFile', 'w')
+    w = open(jenkinsFilePath, 'w')
     buildLine = "jenkinsbuildnumber = \"" + buildNumber + "\""
     w.write(buildLine)
     
