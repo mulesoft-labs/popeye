@@ -22,7 +22,7 @@ def buildJob(job, action) {
             slackSend channel: "#popeye-notifications", message: messageCont
         }
         else {
-          messageCont = ":peach:Succesful " + action + " for: " + job.artifact_id + "into env: " + deployEnv
+          messageCont = ":peach:Succesful " + action + " for: " + job.artifact_id + " into env: " + deployEnv
           slackSend channel: "#popeye-notifications", message: messageCont
         }
       }
@@ -50,7 +50,7 @@ def buildJob(job, action) {
             slackSend channel: "#popeye-notifications", message: messageCont
           }
           else {
-            messageCont = ":strawberry:Succesful " + action + " test for: " + job.artifact_id + "into env: " + deployEnv
+            messageCont = ":strawberry:Succesful " + action + " test for: " + job.artifact_id + " into env: " + deployEnv
             slackSend channel: "#popeye-notifications", message: messageCont
           }
         }
@@ -75,7 +75,9 @@ node {
         }
       }
     }
+}
 
+node {
     if(currentBuild.result == "FAILURE") {
       messageCont = ":x:Failed deployment for ticket " + jenkinsbuildnumber + " into env: " + deployEnv
       slackSend channel: "#popeye-notifications", message: messageCont
