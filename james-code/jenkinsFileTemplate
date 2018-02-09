@@ -1,6 +1,20 @@
 
 
 currentBuild.displayName = jenkinsbuildnumber
+deploy_region = "us-east-1"
+deploy_env = "sandbox"
+account = "sandbox"
+
+
+def tfdeploy() {
+        terraformDeploy(
+          region:             deploy_region,
+          environment:        deploy_env,
+          account:            deploy_env,
+          terraform_version:  "0.11.1",
+          use_docker:         true
+        )
+}
 
 def buildJob(job, action) {
     successVal = true
@@ -8,6 +22,7 @@ def buildJob(job, action) {
       stage (action + ' ' +  job.name) {
         echo "deploying" + job.name
         sleep job.deploy_time
+        tfdeploy()
         if(!job.deploy_success) {
             error 'FAIL'
             successVal = false
