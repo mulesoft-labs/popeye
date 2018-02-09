@@ -10,14 +10,6 @@ from db import db
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%b/%d/%Y %H:%M:%S %Z', level=logging.INFO)
 
-parser = argparse.ArgumentParser()
-parser.add_argument("-jt", "--jiraAccessToken", required=True)
-parser.add_argument("-nl", "--n4jUrl", required=True)
-parser.add_argument("-nu", "--n4jUser", required=True)
-parser.add_argument("-np", "--n4jpwd", required=True)
-args = parser.parse_args()
-
-
 class scheduler(object):
 	def __init__(self, **kwargs):
 		url = kwargs['url']

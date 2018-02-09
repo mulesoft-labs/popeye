@@ -1,6 +1,5 @@
 from flask import Flask, jsonify
 from JiraClient import JiraClient
-import json
 
 from scheduler import scheduler
 
