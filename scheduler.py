@@ -54,6 +54,11 @@ class scheduler(object):
 							print comment
 							self.client.update_comment(artifactComponentMap[artifact]['jira_key'], comment)
 							return None
+					else:
+						comment = str(artifactComponentMap[artifact]['jira_key']) + ": Unable to continue deploy. " + str(dependentArtifact) + " needs to be part of deployment as well!"
+						print comment
+						self.client.update_comment(artifactComponentMap[artifact]['jira_key'], comment)
+						return None;
 				artifactComponentMap[artifact]['deployBuild'] = str(self.db.getDeployBuild(artifact))
 				artifactComponentMap[artifact]['smokeBuild'] = str(self.db.getSmokeBuild(artifact))
 				deploymentOrder.append(artifactComponentMap[artifact])
