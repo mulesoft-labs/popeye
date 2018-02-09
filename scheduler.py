@@ -1,9 +1,17 @@
 from collections import deque
 import JiraClient
 from neo4jrestclient.client import GraphDatabase
-import time, sys
+import time
+import argparse
 
-gdb = GraphDatabase("http://localhost:7474", username="neo4j", password="neo4jp")
+parser = argparse.ArgumentParser()
+parser.add_argument("-jt", "--jiraAccessToken", required=True)
+parser.add_argument("-nl", "--n4jUrl", required=True)
+parser.add_argument("-nu", "--n4jUser", required=True)
+parser.add_argument("-np", "--n4jpwd", required=True)
+args = parser.parse_args()
+gdb = GraphDatabase(args.n4jUrl, username=args.n4jUser, password=args.n4jpwd)
+jiraAccessToken = args.jiraAccessToken
 
 def getGraph():
 	adjacencyList = {}
@@ -45,7 +53,7 @@ def kahn_topsort(graph):
         return []            # then return an empty list
 
 def getDeployableComponents():
-	token = sys.argv[1]
+	token = jiraAccessToken
 	client = JiraClient.JiraClient(token)
 	deployTickets = client.fetch_artifacts(time.strftime("%Y-%m-%d"))
 	deployableComponents = []
