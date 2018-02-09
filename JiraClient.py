@@ -167,12 +167,12 @@ class JiraClient():
             return str(output.decode("utf-8"))
 
     def cli_mbi(self):
-        project = input("Enter project: ")
+        project = input("Enter the project initials: ")
         description = self.description_commit()
         print("You have the followings MBI:")
         print(self.fetch_stories())
         issue = input("Enter MBI: ")
-        version = input("The last version is " + self.get_tag() + ". Enter Version:")
+        version = input("The last version is " + self.get_tag()+ ". Enter Version:")
         component = self.find_component()
         if self.validate_input(project, issue, version, component):
             self.create_subtask(project, issue, description, component, version)
@@ -199,7 +199,7 @@ class JiraClient():
                         },
                     "components": [
                         {
-                            "set" : [{"name" : version}]
+                            "name": component
                         }
                     ],
                     "versions": [
@@ -213,6 +213,9 @@ class JiraClient():
         url = 'https://www.mulesoft.org/jira/rest/api/2/issue/'
         try:
             r = requests.post(url, data=json.dumps(payload), headers=headers)
+            resp = r.content.decode('utf-8')
+            jiraKey = json.loads(resp)
+            print("Issue created: " + jiraKey["key"])
         except r.exceptions.HTTPError as err:
             print(err)
 
