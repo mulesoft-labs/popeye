@@ -196,5 +196,3 @@ class JiraClient():
         url = 'https://www.mulesoft.org/jira/rest/api/2/issue/' + mib_key + '/comment'
 
         response = requests.post(url, data=json.dumps(payload), headers=headers)
-
-        print response.status_code
