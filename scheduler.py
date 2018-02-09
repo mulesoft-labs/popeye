@@ -23,6 +23,7 @@ args = parser.parse_args()
 db = db(url=args.n4jUrl, username=args.n4jUser, pwd=args.n4jpwd, logger=logger)
 
 jiraAccessToken = args.jiraAccessToken
+client = JiraClient.JiraClient(jiraAccessToken)
 
 def getGraph():
 	adjacencyList = {}
@@ -64,7 +65,6 @@ def kahn_topsort(graph):
         return []            # then return an empty list
 
 def getDeployableComponents():
-	client = JiraClient.JiraClient(jiraAccessToken)
 	deployTickets = client.fetch_artifacts(time.strftime("%Y-%m-%d"))
 	deployableComponents = []
 	for ticket in deployTickets:
@@ -90,6 +90,15 @@ def generateDeploymentOrder(order, deployableComponents):
 	deploymentOrder = []
 	for artifact in order:
 		if artifact in artifactComponentMap:
+			requestedVersion = artifactComponentMap[artifact]['version']
+			for dependentArtifact in graph[artifact]:
+				if dependentArtifact in artifactComponentMap.keys():
+					dependentVersion = db.getDependencyVersion(artifact, dependentArtifact)
+					if requestedVersion != dependentVersion:
+						comment = str(artifactComponentMap[artifact]['jira_key']) + ": Unable to continue deploy. Version of " + str(artifact) + " is not compatible for this release"
+						print comment
+						client.update_comment(artifactComponentMap[artifact]['jira_key'], comment)
+						return None
 			artifactComponentMap[artifact]['deployBuild'] = str(db.getDeployBuild(artifact))
 			artifactComponentMap[artifact]['smokeBuild'] = str(db.getSmokeBuild(artifact))
 			deploymentOrder.append(artifactComponentMap[artifact])
@@ -98,11 +107,12 @@ def generateDeploymentOrder(order, deployableComponents):
 def invokeDeploymentPipeline(order, deployableComponents):
 	for deployableComponent in deployableComponents:
 		deploymentOrder = generateDeploymentOrder(order, deployableComponent['artifacts'])
-		poppyJenkObj = PopEyeGenJenkins(deployableComponent['env'])
-		poppyJenkObj.startDeploy(deployableComponent['jira_key'], deploymentOrder)
-		print deployableComponent['jira_key']
-		print deployableComponent['env']
-		print deploymentOrder
+		if deploymentOrder is not None:
+			poppyJenkObj = PopEyeGenJenkins(deployableComponent['env'])
+			poppyJenkObj.startDeploy(deployableComponent['jira_key'], deploymentOrder)
+			print deployableComponent['jira_key']
+			print deployableComponent['env']
+			print deploymentOrder
 
 # order = kahn_topsort(getGraph())
 invokeDeploymentPipeline(db.queryNodesInTopologicalOrder(), getDeployableComponents())
