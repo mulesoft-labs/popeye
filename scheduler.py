@@ -40,11 +40,18 @@ class scheduler(object):
 	def generateDeploymentOrder(self, order, deployableComponents):
 		artifactComponentMap = {}
 		graph = self.db.getGraph()
+		graph2 = self.db.getGraph2()
 		for component in deployableComponents:
 			artifactComponentMap[component['artifact_id']] = component
 		deploymentOrder = []
 		for artifact in order:
 			if artifact in artifactComponentMap:
+				for dep in graph2[artifact]:
+					if dep not in artifactComponentMap:
+						comment = str(artifactComponentMap[artifact]['jira_key']) + ": Unable to continue deploy. " + str(dep) + " is required to deploy " + str(artifact)
+						self.client.update_comment(artifactComponentMap[artifact]['jira_key'], comment)
+						print comment
+						return None
 				requestedVersion = artifactComponentMap[artifact]['version']
 				for dependentArtifact in graph[artifact]:
 					if dependentArtifact in artifactComponentMap.keys():
@@ -54,11 +61,6 @@ class scheduler(object):
 							print comment
 							self.client.update_comment(artifactComponentMap[artifact]['jira_key'], comment)
 							return None
-					else:
-						comment = str(artifactComponentMap[artifact]['jira_key']) + ": Unable to continue deploy. " + str(dependentArtifact) + " needs to be part of deployment as well!"
-						print comment
-						self.client.update_comment(artifactComponentMap[artifact]['jira_key'], comment)
-						return None;
 				artifactComponentMap[artifact]['deployBuild'] = str(self.db.getDeployBuild(artifact))
 				artifactComponentMap[artifact]['smokeBuild'] = str(self.db.getSmokeBuild(artifact))
 				deploymentOrder.append(artifactComponentMap[artifact])
