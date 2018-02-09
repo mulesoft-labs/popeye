@@ -22,7 +22,7 @@ class JiraClient():
 
     def fetch_tickets_to_deploy(self):
         payload = {
-            "jql": "project = HX AND issuetype = Story AND status in (\"Ready to Deploy\", \"StgX Done\", \"QAX Done\", \"Prod US Done\", \"Prod EU Done\")",
+            "jql": "project = HX AND issuetype = Story AND status in (\"Ready to Deploy\", \"StgX Done\", \"QAX Done\", \"Prod EU Done\")",
             "fields": ["summary"]}
         headers = self.build_headers()
         url = 'https://www.mulesoft.org/jira/rest/api/2/search'
@@ -46,9 +46,24 @@ class JiraClient():
 
     def fetch_artifact_from_info(self, sid):
         ticket_info = self.fetch_ticket_info(sid)
-        artifact_id = ticket_info["fields"]["components"][0]["name"]
-        artifact_version = ticket_info["fields"]["versions"][0]["name"]
+        comp = ticket_info["fields"]["components"]
+
+        # Fetch component ...
+        if len(comp) == 0:
+            raise ValueError(sid + " must have component defined")
+        artifact_id = comp[0]["name"]
+
+        # Fetch version ...
+        version = ticket_info["fields"]["versions"]
+        if len(version) ==0:
+            raise ValueError(sid + " must have version defined")
+        artifact_version = version[0]["name"]
+
+        if len(comp) == 0:
+            raise ValueError(sid + " must have version defined")
+
         jira_key = ticket_info["key"]
+
 
         return {"jira_key": jira_key, "artifact_id": artifact_id, "version": artifact_version}
 
