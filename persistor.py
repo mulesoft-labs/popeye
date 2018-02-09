@@ -17,17 +17,29 @@ class persistor(object):
         self.logger = kwargs['logger']
         self.logger.debug("Neo4j initialized. url={0} username={1} pwd={2}".format(url, username, pwd))
 
-    def createServiceDependency(self, _this, _dependsOn):
-        serviceThis = self.n4j.node(name=_this)
-        serviceThat = self.n4j.node(name=_dependsOn)
-        serviceThis.relationships.create("depends_on", serviceThat)
+    def createServiceDependency(self, _this, _that):
+        serviceThis = self.n4j.query(q="MERGE (node:artifact {name: '" + _this + "'}) RETURN node")
+        serviceThat = self.n4j.query(q="MERGE (node:artifact {name: '" + _that + "'}) RETURN node")
+        self.n4j.query(q="MATCH (a:artifact), (b:artifact) WHERE a.name='"+_this+"' AND b.name='"+_that+ "' CREATE UNIQUE (a)-[:depends]->(b)")
 
+        # self.n4j.query(q="MERGE (serviceThis)-[:dependsOn {r:'dependsOn'}]->(serviceThat)")
+        # MERGE (n)-[:know {r:'123'}]->(test2) //Create the relation between these nodes if it does not already exist
 
+        # serviceThis = self.n4j.node(name=_this)
+        # serviceThat = self.n4j.node(name=_dependsOn)
+        # serviceThis.relationships.create("depends_on", serviceThat)
+
+    def clearAllNodes(self):
+        self.n4j.query(q="MATCH (n), ()-[r]-() DELETE n,r")
 
 #TODO : no circular dependency.
 #
 #
-#
+#q = 'MATCH (u:User)-[r:likes]->(m:Beer) WHERE u.name="Marco" RETURN u, type(r), m'
+# "db" as defined above
+# results = db.query(q, returns=(client.Node, str, client.Node))
+#for r in results:
+#    print("(%s)-[%s]->(%s)" % (r[0]["name"], r[1], r[2]["name"
 #
 #
 # # Create some nodes with labels
