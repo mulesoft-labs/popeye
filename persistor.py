@@ -15,10 +15,17 @@ class persistor(object):
         self.logger.debug("Neo4j initialized. url={0} username={1} pwd={2}".format(url, username, pwd))
 
     def createServiceDependency(self, _this, _that):
-        self.n4j.query(q="MERGE (node:artifact {name: '" + _this + "'}) RETURN node")
-        self.n4j.query(q="MERGE (node:artifact {name: '" + _that + "'}) RETURN node")
-        self.n4j.query(q="MATCH (a:artifact), (b:artifact) WHERE a.name='"+_this+"' AND b.name='"+_that+ "' CREATE UNIQUE (a)<-[:dependency_of]-(b)")
-        self.logger.info("inserted relation into db.({})<-dependency_of-({})".format(_this, _that))
+        #_this is a complex object
+        _this_name = _this['id']
+        if 'deploy_build' in _this:
+            _this_deploy_build = _this['deploy_build']
+            self.n4j.query(q="MERGE (node:artifact {name: '" + _this_name + "'}) set node.deploy_build='"+_this_deploy_build+"' RETURN node")
+        else:
+            self.n4j.query(q="MERGE (node:artifact {name: '" + _this_name + "'}) RETURN node")
+        if _that:
+            self.n4j.query(q="MERGE (node:artifact {name: '" + _that + "'}) RETURN node")
+            self.n4j.query(q="MATCH (a:artifact), (b:artifact) WHERE a.name='"+_this_name+"' AND b.name='"+_that+ "' CREATE UNIQUE (a)<-[:dependency_of]-(b)")
+            self.logger.info("inserted relation into db.({})<-dependency_of-({})".format(_this_name, _that))
 
     def clearAllNodes(self):
         self.n4j.query(q="MATCH (n), ()-[r]-() DELETE n,r")
