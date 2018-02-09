@@ -1,69 +1,87 @@
-import http.client
-import json
+import json, requests
 
+class JiraClient():
+    board_status_to_env = {"Ready to Deploy": "QAX",
+                           "QAX Done": "STGX",
+                           "STGX Done": "PROD-EU",
+                           "Prod EU Done": "PROD-US",
+                           "Prod US Done": "UNKNOWN"}
 
-def build_headers():
-    headers = {
-        'Content-Type': "application/json",
-        'Authorization': "Basic xxxx",
-        'Cache-Control': "no-cache"
-    }
-    return headers
+    def __init__(self, token):
+        self.auth_token = token
 
+    def build_headers(self):
+        return {
+            'Content-Type': "application/json",
+            'Authorization': "Basic " + self.auth_token,
+            'Cache-Control': "no-cache"
+        }
 
-def fetch_tickets_ready_to_deploy():
-    conn = http.client.HTTPSConnection("www.mulesoft.org")
+    def fetch_tickets_to_deploy(self):
+        payload = {
+            "jql": "project = HX AND issuetype = Story AND status in (\"Ready to Deploy\", \"StgX Done\", \"QAX Done\", \"Prod US Done\", \"Prod EU Done\")",
+            "fields": ["summary"]}
+        headers = self.build_headers()
+	url = 'https://www.mulesoft.org/jira/rest/api/2/search'
+	r = requests.post(url, data=json.dumps(payload), headers=headers)
 
-    payload = {"jql": "project = HX AND issuetype = Story AND status = \"Ready to Deploy\"", "fields": ["summary"]}
-    headers = build_headers()
+        # Filter only the tickets required for the current deploy date...
+        issues = r.json()['issues']
+        return list(map(lambda x: x["key"], issues))
 
-    conn.request("POST", "/jira/rest/api/2/search", json.dumps(payload), headers)
+    def fetch_ticket_info(self, id):
+        headers = self.build_headers()
+	url = 'https://www.mulesoft.org/jira/rest/api/2/issue/' + id
+	r = requests.get(url, headers=headers)
+        return r.json()
 
-    res = conn.getresponse()
-    data = res.read()
+    def fetch_subtask_from_id(self, id):
+        ticket_info = self.fetch_ticket_info(id)
 
-    # Filter Jira tickets ...
-    issues = json.loads(data)['issues']
-    if len(issues) != 1:
-        raise ValueError("Invalid Ticket Number Size")
+        subtasks_ids = ticket_info['fields']["subtasks"]
+        return list(map(lambda x: x["key"], subtasks_ids))
 
-    return list(map(lambda x: x["key"], issues))[0]
+    def fetch_artifact_from_info(self, sid):
+        ticket_info = self.fetch_ticket_info(sid)
+        artifact_id = ticket_info["fields"]["components"][0]["name"]
+        artifact_version = ticket_info["fields"]["versions"][0]["name"]
+        jira_key = ticket_info["key"]
 
+        return {"jira_key": jira_key, "artifact_id": artifact_id, "version": artifact_version}
 
-def fetch_ticket_info(id):
-    conn = http.client.HTTPSConnection("www.mulesoft.org")
-    headers = build_headers()
-    conn.request("GET", "/jira/rest/api/2/issue/" + id, headers=headers)
-    res = conn.getresponse()
-    data = res.read()
+    def fetch_artifacts(self, date):
+        # Fetch all the events ...
+        all_stories_keys = self.fetch_tickets_to_deploy()
 
-    return json.loads(data)
+        # Filter events to be deployed ...
+        story_keys = list(
+            filter(lambda id: self.fetch_ticket_info(id)["fields"]["customfield_13861"] == date, all_stories_keys))
 
+        # Fetch the first ticket to be deployed ...
+        return list(map(lambda sid: self.story_to_deployment_unit(sid), story_keys))
 
-def fetch_subtask_from_id(id):
-    ticket_info = fetch_ticket_info(id)
+    def story_to_deployment_unit(self, story_key):
+        subtask_ids = self.fetch_subtask_from_id(story_key)
 
-    subtasksIds = ticket_info['fields']["subtasks"]
-    return list(map(lambda x: x["key"], subtasksIds))
+        # Fetch artifact version ...
+        artifacts = list(map(lambda x: self.fetch_artifact_from_info(x), subtask_ids))
 
+        # Fetch next environment ...
+        next_env = self.fetch_next_env_to_deploy(story_key)
 
-def fetch_artifact_from_info(sid):
-    ticket_info = fetch_ticket_info(sid)
-    artifact_id = ticket_info["fields"]["components"][0]["name"]
-    artifact_version = ticket_info["fields"]["versions"][0]["name"]
-    return {"id": artifact_id, "version": artifact_version}
+        return {"jira_key": story_key, "next_env_to_deploy": next_env, "artifacts": artifacts}
 
+    def move_next_stage(self, id):
+        status = self.fetch_ticket_status(id)
+        print(status)
 
-def fetch_artifacts():
-    # Fetch all the events ...
-    storiesKey = fetch_tickets_ready_to_deploy()
+    def fetch_ticket_status(self, id):
+        # Fetch ticket info ...
+        ticket_info = self.fetch_ticket_info(id)
+        # Get current state ...
+        status = ticket_info["fields"]["status"]["name"]
+        return status
 
-    # Fetch the first ticket to be deployed ...
-    subtasksIds = fetch_subtask_from_id(storiesKey)
-
-    # Fetch artifact Version ...
-    return list(map(lambda x: fetch_artifact_from_info(x), subtasksIds))
-
-
-print(fetch_artifacts())
-
+    def fetch_next_env_to_deploy(self, sid):
+        board_status = self.fetch_ticket_status(sid)
+        return self.board_status_to_env[board_status]
