@@ -3,6 +3,7 @@ import JiraClient
 from neo4jrestclient.client import GraphDatabase
 import time
 import argparse
+import random
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-jt", "--jiraAccessToken", required=True)
@@ -59,6 +60,12 @@ def getDeployableComponents():
 	deployableComponents = []
 	for ticket in deployTickets:
 		for artifact in ticket['artifacts']:
+			artifact['jira_key'] = ticket['jira_key']
+			artifact['env'] = ticket['next_env_to_deploy']
+			artifact['deploy_time'] = random.randint(1,10)
+			artifact['test_time'] = random.randint(1,10)
+			artifact['deploy_success'] = True
+			artifact['test_success'] = True
 			deployableComponents.append(artifact)
 	return deployableComponents
 
