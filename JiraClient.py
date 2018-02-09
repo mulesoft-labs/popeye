@@ -97,7 +97,7 @@ class JiraClient():
 
     def fetch_next_env_to_deploy(self, sid):
         board_status = self.fetch_ticket_status(sid)
-        return self.board_status_to_env[board_status]
+        return self.board_status_to_env.get(board_status)
 
     def fetch_stories(self):
         payload = {
@@ -115,7 +115,7 @@ class JiraClient():
     def move_next_stage(self, sid):
         # Fetch ticket status ...
         board_status = self.fetch_ticket_status(sid)
-        print(board_status)
+        print board_status
 
         next_status = self.board_status_to_env[board_status]
 
@@ -139,7 +139,6 @@ class JiraClient():
 
         headers = self.build_headers()
         url = 'https://www.mulesoft.org/jira/rest/api/2/issue/' + sid + '/transitions'
-        print(payload)
 
         # Move to next status ...
         requests.post(url, data=json.dumps(payload), headers=headers)
@@ -153,15 +152,13 @@ class JiraClient():
             processDiff = subprocess.Popen(diff.split(), stdout=subprocess.PIPE)
             output, error = processDiff.communicate()
             if (error is None):
-                return str(output)
+                return str(output.decode("utf-8"))
             else:
-                print
-                str(error)
+                return "error"
         else:
-            print
-            str(error)
+            return "error"
 
-    def create_subtask(self, summary, description):
+    def create_subtask(self):
         project = input("Enter project: ")
         issue = input("Enter MBI: ")
         payload = {
@@ -175,8 +172,8 @@ class JiraClient():
                         {
                             "key": issue
                         },
-                    "summary": summary,
-                    "description": description,
+                    "summary": "Change log " + issue,
+                    "description": self.description_commit(),
                     "issuetype":
                         {
                             "name": "Sub-task"
