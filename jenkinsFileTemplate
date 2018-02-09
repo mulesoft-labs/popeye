@@ -1,6 +1,6 @@
 
 
-currentBuild.displayName = jenkinsbuildnumber
+currentBuild.displayName = jenkinsbuildnumber + " - " + deployEnv
 
 def buildJob(job, action) {
     successVal = true
@@ -8,9 +8,12 @@ def buildJob(job, action) {
       stage (action + ' ' +  job.name) {
         echo "deploying" + job.name
         sleep job.deploy_time
+        slackSend channel: "#popeye-notifications", message: action + " " + job.name
+
         if(!job.deploy_success) {
             error 'FAIL'
             successVal = false
+            slackSend channel: "#popeye-notifications", message: action + " " + job.name + " FAILED"
         }
       }
     }
@@ -27,6 +30,7 @@ def buildJob(job, action) {
             echo "Stage failed"
             error 'FAIL'
             successVal = false
+            slackSend channel: "#popeye-notifications", message: action + " " + job.name + " FAILED"
           }
         }
       }
@@ -50,4 +54,10 @@ node {
         }
       }
     }
+
+    if(currentBuild.result == "FAILURE") {
+      messageCont = "Deployment for ticket " + jenkinsbuildnumber + " FAILED"
+      slackSend channel: "#popeye-notifications", message: action + " " + job.name + " FAILED"
+    }
+
 }
