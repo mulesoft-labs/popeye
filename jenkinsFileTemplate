@@ -41,7 +41,7 @@ def buildJob(job, action) {
             build job: smokeBuild
             echo "Ran external smoke test job: " + smokeBuild
           }
-          sleep job.test_time
+          //sleep job.test_time
           if(action == "deploy" && !job.test_success) {
             echo "Stage failed"
             error 'FAIL'
