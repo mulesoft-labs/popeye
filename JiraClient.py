@@ -1,4 +1,6 @@
-import json, requests, subprocess
+import json, requests, subprocess, sys, yaml
+
+from pip._vendor.distlib.compat import raw_input
 
 
 class JiraClient():
@@ -111,11 +113,10 @@ class JiraClient():
         issues = r.json()['issues']
         return list(map(lambda x: x["key"], issues))
 
-
     def move_next_stage(self, sid):
         # Fetch ticket status ...
         board_status = self.fetch_ticket_status(sid)
-        print board_status
+        print(board_status)
 
         next_status = self.board_status_to_env[board_status]
 
@@ -158,9 +159,27 @@ class JiraClient():
         else:
             return "error"
 
-    def create_subtask(self):
+    def get_tag(self):
+        tag = "git describe --tag"
+        processPull = subprocess.Popen(tag.split(), stdout=subprocess.PIPE)
+        output, error = processPull.communicate()
+        if (error is None):
+            return str(output.decode("utf-8"))
+
+    def cli_mbi(self):
         project = input("Enter project: ")
+        description = self.description_commit()
+        print("You have the followings MBI:")
+        print(self.fetch_stories())
         issue = input("Enter MBI: ")
+        version = input("The last version is " + self.get_tag() + ". Enter Version:")
+        component = self.find_component()
+        if self.validate_input(project, issue, version, component):
+            self.create_subtask(project, issue, description, component, version)
+        else:
+            print("Exit")
+
+    def create_subtask(self, project, issue, description, component, version):
         payload = {
             "fields":
                 {
@@ -173,17 +192,73 @@ class JiraClient():
                             "key": issue
                         },
                     "summary": "Change log " + issue,
-                    "description": self.description_commit(),
+                    "description": description,
                     "issuetype":
                         {
                             "name": "Sub-task"
+                        },
+                    "components": [
+                        {
+                            "set" : [{"name" : version}]
                         }
+                    ],
+                    "versions": [
+                        {
+                            "name": version
+                        }
+                    ]
                 }
         }
         headers = self.build_headers()
         url = 'https://www.mulesoft.org/jira/rest/api/2/issue/'
-        r = requests.post(url, data=json.dumps(payload), headers=headers)
+        try:
+            r = requests.post(url, data=json.dumps(payload), headers=headers)
+        except r.exceptions.HTTPError as err:
+            print(err)
 
+    def validate_input(self, project, mbi, version, component):
+        question1 = "Project: " + project + " \nMBI: " + mbi + "\nVersion: " + version + "\nComponent: " + component + "\nIt's correct? "
+        return self.query_yes_no(question1)
+
+    def query_yes_no(self, question, default="yes"):
+        """Ask a yes/no question via raw_input() and return their answer.
+
+        "question" is a string that is presented to the user.
+        "default" is the presumed answer if the user just hits <Enter>.
+            It must be "yes" (the default), "no" or None (meaning
+            an answer is required of the user).
+
+        The "answer" return value is True for "yes" or False for "no".
+        """
+        valid = {"yes": True, "y": True, "ye": True,
+                 "no": False, "n": False}
+        if default is None:
+            prompt = " [y/n] "
+        elif default == "yes":
+            prompt = " [Y/n] "
+        elif default == "no":
+            prompt = " [y/N] "
+        else:
+            raise ValueError("invalid default answer: '%s'" % default)
+
+        while True:
+            sys.stdout.write(question + prompt)
+            choice = raw_input().lower()
+            if default is not None and choice == '':
+                return valid[default]
+            elif choice in valid:
+                return valid[choice]
+            else:
+                sys.stdout.write("Please respond with 'yes' or 'no' "
+                                 "(or 'y' or 'n').\n")
+
+    def find_component(self):
+        with open("popeye.yaml") as stream:
+            try:
+                file = (yaml.load(stream))
+                return file["id"]
+            except yaml.YAMLError as exc:
+                print(exc)
 
     def update_comment(self, mib_key, comment):
 

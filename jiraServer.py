@@ -19,7 +19,7 @@ scheduler = scheduler(url=args.n4jUrl, username=args.n4jUser, pwd=args.n4jpwd, j
 @application.route('/mbis/', methods=['GET'])
 def getMbis():
     stories = client.fetch_stories()
-    print stories
+    print(stories)
     return jsonify(stories)
 
 @application.route('/mbis/<mbiID>', methods=['GET'])
