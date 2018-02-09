@@ -71,7 +71,7 @@ class db(object):
 
     def getDeployBuild(self, artifact):
         result = self.n4j.query(q="match(n) where n.name=\'" + str(artifact) + "\' return n.deploy_build")
-        str(result[0][0])
+        return result[0][0]
 
 
 #TODO : no circular dependency.

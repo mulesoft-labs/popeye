@@ -85,14 +85,14 @@ def getDeployableComponents():
 def generateDeploymentOrder(order, deployableComponents):
 	artifactComponentMap = {}
 	for component in deployableComponents:
-		artifactComponentMap[str(component['artifact_id'])] = component
+		artifactComponentMap[component['artifact_id']] = component
 	deploymentOrder = []
 	for artifact in order:
 		if artifact in artifactComponentMap:
 			# query = "match(n) where n.name=\'" + str(artifact) + "\' return n.deploy_build"
 			# result = gdb.query(query)
 			# artifactComponentMap[artifact]['deployBuild'] = str(result[0][0])
-			artifactComponentMap[artifact]['deployBuild'] = db.getDeployBuild(artifact)
+			artifactComponentMap[artifact]['deployBuild'] = str(db.getDeployBuild(artifact))
 			deploymentOrder.append(artifactComponentMap[artifact])
 	return deploymentOrder
 
@@ -105,9 +105,6 @@ def invokeDeploymentPipeline(order, deployableComponents):
 		print deployableComponent['env']
 		print deploymentOrder
 
-order = kahn_topsort(getGraph())
+# order = kahn_topsort(getGraph())
 #deploymentOrder = generateDeploymentOrder(order, componentsToBeDeployed)
-deploymentOrder = generateDeploymentOrder(db.queryNodesInTopologicalOrder(), getDeployableComponents())
-print deploymentOrder
-componentsToBeDeployed = getDeployableComponents()
-invokeDeploymentPipeline(order, componentsToBeDeployed)
+invokeDeploymentPipeline(db.queryNodesInTopologicalOrder(), getDeployableComponents())

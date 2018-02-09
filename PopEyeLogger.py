@@ -5,21 +5,9 @@
 '''
 
 import sys
-import string
-import time
-import datetime
-from datetime import datetime
-from dateutil import tz
-from optparse import OptionParser
-import datetime
-import fcntl
+
 import os.path
-import re
-import subprocess
-import boto3
-from botocore.exceptions import ClientError
-import random
-import json
+
 import logging
 
 
