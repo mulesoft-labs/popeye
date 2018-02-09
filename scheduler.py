@@ -59,14 +59,18 @@ def getDeployableComponents():
 	deployTickets = client.fetch_artifacts(time.strftime("%Y-%m-%d"))
 	deployableComponents = []
 	for ticket in deployTickets:
+		deployableComponent = {}
+		deployableComponent['jira_key'] = ticket['jira_key']
+		deployableComponent['env'] = ticket['next_env_to_deploy']
 		for artifact in ticket['artifacts']:
-			artifact['jira_key'] = ticket['jira_key']
-			artifact['env'] = ticket['next_env_to_deploy']
 			artifact['deploy_time'] = random.randint(1,10)
 			artifact['test_time'] = random.randint(1,10)
 			artifact['deploy_success'] = True
 			artifact['test_success'] = True
-			deployableComponents.append(artifact)
+			if 'artifacts' not in deployableComponent:
+				deployableComponent['artifacts'] = []
+			deployableComponent['artifacts'].append(artifact)
+		deployableComponents.append(deployableComponent)
 	return deployableComponents
 
 def generateDeploymentOrder(order, deployableComponents):
@@ -82,7 +86,13 @@ def generateDeploymentOrder(order, deployableComponents):
 			deploymentOrder.append(artifactComponentMap[artifact])
 	return deploymentOrder
 
+def invokeDeploymentPipeline(order, deployableComponents):
+	for deployableComponent in deployableComponents:
+		deploymentOrder = generateDeploymentOrder(order, deployableComponent['artifacts'])
+		print deployableComponent['jira_key']
+		print deployableComponent['env']
+		print deploymentOrder
+
 order = kahn_topsort(getGraph())
 componentsToBeDeployed = getDeployableComponents()
-deploymentOrder = generateDeploymentOrder(order, componentsToBeDeployed)
-print deploymentOrder
+invokeDeploymentPipeline(order, componentsToBeDeployed)
