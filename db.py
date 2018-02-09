@@ -36,7 +36,7 @@ class db(object):
     def clearAllNodes(self):
         self.n4j.query(q="MATCH (n), ()-[r]-() DELETE n,r")
 
-    def queryNodesInTopologicalOrder(self):
+    def getGraph(self):
         graph={}
         for tuple in self.n4j.query(q='MATCH (n)-[r]->(m) RETURN n.name,m.name').elements:
             node = tuple[0]
@@ -47,7 +47,10 @@ class db(object):
                 graph[dependsOnNode] = []
             if dependsOnNode not in graph[node]:
                 graph[node].append(dependsOnNode)
+	return graph
 
+    def queryNodesInTopologicalOrder(self):
+        graph = self.getGraph()
         in_degree = { u : 0 for u in graph }     # determine in-degree
         for u in graph:                          # of each node
             for v in graph[u]:
