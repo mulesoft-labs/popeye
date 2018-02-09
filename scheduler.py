@@ -69,6 +69,8 @@ class scheduler(object):
 				print deployableComponent['jira_key']
 				print deployableComponent['env']
 				print deploymentOrder
+			else:
+				print "Aborted deploy of " + str(deployableComponent['jira_key'])
 
 
 if __name__ == '__main__':
