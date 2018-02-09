@@ -57,6 +57,8 @@ for repo in repos:
 			me = {'id': repo}
 		if yaml_content.has_key('deploy_build'):
 			me['deploy_build'] = yaml_content['deploy_build']
+		if yaml_content.has_key('smoke_build'):
+			me['smoke_build'] = yaml_content['smoke_build']
 		if yaml_content.has_key('require'):
 			for dependency in yaml_content['require']:
 				logger.info("Found a dependency from " + me['id'] + " -> " + dependency)
