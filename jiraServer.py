@@ -1,11 +1,20 @@
+import argparse
+
 from flask import Flask, jsonify
 from JiraClient import JiraClient
 
 from scheduler import scheduler
 
+parser = argparse.ArgumentParser()
+parser.add_argument("-jt", "--jiraAccessToken", required=True)
+parser.add_argument("-nl", "--n4jUrl", required=True)
+parser.add_argument("-nu", "--n4jUser", required=True)
+parser.add_argument("-np", "--n4jpwd", required=True)
+args = parser.parse_args()
+
 application = Flask(__name__)
-client = JiraClient("aGFja3gudXNlcjpoYWNreC51c2VyTXVsZTE =")
-scheduler = scheduler(url="http://127.0.0.1:7474", username="neo4j", pwd="popeye", jiraAccessToken="aGFja3gudXNlcjpoYWNreC51c2VyTXVsZTE =")
+client = JiraClient(args.jiraAccessToken)
+scheduler = scheduler(url=args.n4jUrl, username=args.n4jUser, pwd=args.n4jpwd, jiraAccessToken=args.jiraAccessToken)
 
 @application.route('/mbis/', methods=['GET'])
 def getMbis():

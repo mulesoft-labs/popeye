@@ -1,28 +1,15 @@
 #!/usr/bin/python
 
-import sys
+
 import time
 import os
-import platform
-import subprocess
-from socket import socket
-import urllib2
+
 from optparse import OptionParser
-import ast
-import re
-import traceback
-#import random
-#import requests
+
 import json
 
 from datetime import datetime
 
-import socket
-
-from git import Repo
-import git
-
-import shutil
 
 from PopEyeLogger import PopEyeLogger
 from PopEyeGit import PopEyeGit
