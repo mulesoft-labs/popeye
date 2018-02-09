@@ -1,6 +1,7 @@
 from collections import deque
 import JiraClient
 from neo4jrestclient.client import GraphDatabase
+from PopEyeGenJenkins import PopEyeGenJenkins
 import time
 import argparse
 import random
@@ -89,6 +90,8 @@ def generateDeploymentOrder(order, deployableComponents):
 def invokeDeploymentPipeline(order, deployableComponents):
 	for deployableComponent in deployableComponents:
 		deploymentOrder = generateDeploymentOrder(order, deployableComponent['artifacts'])
+		#poppyJenkObj = PopEyeGenJenkins(deployableComponent['env'])
+		#poppyJenkObj.startDeploy(deployableComponent['jira_key'], jsonObj)
 		print deployableComponent['jira_key']
 		print deployableComponent['env']
 		print deploymentOrder
