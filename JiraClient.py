@@ -1,11 +1,14 @@
 import json, requests
 
+
 class JiraClient():
     board_status_to_env = {"Ready to Deploy": "QAX",
                            "QAX Done": "STGX",
-                           "STGX Done": "PROD-EU",
+                           "StgX Done": "PROD-EU",
                            "Prod EU Done": "PROD-US",
                            "Prod US Done": "UNKNOWN"}
+
+    env_to_status_id = {"QAX": "21", "STGX": "31", "PROD-EU": "41", "PROD-US": "51"}
 
     def __init__(self, token):
         self.auth_token = token
@@ -22,8 +25,8 @@ class JiraClient():
             "jql": "project = HX AND issuetype = Story AND status in (\"Ready to Deploy\", \"StgX Done\", \"QAX Done\", \"Prod US Done\", \"Prod EU Done\")",
             "fields": ["summary"]}
         headers = self.build_headers()
-	url = 'https://www.mulesoft.org/jira/rest/api/2/search'
-	r = requests.post(url, data=json.dumps(payload), headers=headers)
+        url = 'https://www.mulesoft.org/jira/rest/api/2/search'
+        r = requests.post(url, data=json.dumps(payload), headers=headers)
 
         # Filter only the tickets required for the current deploy date...
         issues = r.json()['issues']
@@ -31,8 +34,8 @@ class JiraClient():
 
     def fetch_ticket_info(self, id):
         headers = self.build_headers()
-	url = 'https://www.mulesoft.org/jira/rest/api/2/issue/' + id
-	r = requests.get(url, headers=headers)
+        url = 'https://www.mulesoft.org/jira/rest/api/2/issue/' + id
+        r = requests.get(url, headers=headers)
         return r.json()
 
     def fetch_subtask_from_id(self, id):
@@ -85,3 +88,35 @@ class JiraClient():
     def fetch_next_env_to_deploy(self, sid):
         board_status = self.fetch_ticket_status(sid)
         return self.board_status_to_env[board_status]
+
+    def move_next_stage(self, sid):
+        # Fetch ticket status ...
+        board_status = self.fetch_ticket_status(sid)
+        print board_status
+
+        next_status = self.board_status_to_env[board_status]
+
+        # Move ticket to a new status ...
+        status_id = self.env_to_status_id[next_status]
+
+        payload = {
+            "update": {
+                "comment": [
+                    {
+                        "add": {
+                            "body": "Automatic flow transitioning based on flow"
+                        }
+                    }
+                ]
+            },
+            "transition": {
+                "id": status_id
+            }
+        }
+
+        headers = self.build_headers()
+        url = 'https://www.mulesoft.org/jira/rest/api/2/issue/' + sid + '/transitions'
+        print(payload)
+
+        # Move to next status ...
+        requests.post(url, data=json.dumps(payload), headers=headers)
