@@ -1,6 +1,4 @@
-import http.client
-import json
-
+import json, requests
 
 class JiraClient():
     board_status_to_env = {"Ready to Deploy": "QAX",
@@ -20,32 +18,22 @@ class JiraClient():
         }
 
     def fetch_tickets_to_deploy(self):
-        conn = http.client.HTTPSConnection("www.mulesoft.org")
-
         payload = {
             "jql": "project = HX AND issuetype = Story AND status in (\"Ready to Deploy\", \"StgX Done\", \"QAX Done\", \"Prod US Done\", \"Prod EU Done\")",
             "fields": ["summary"]}
         headers = self.build_headers()
-
-        conn.request("POST", "/jira/rest/api/2/search", json.dumps(payload), headers=headers)
-
-        res = conn.getresponse()
-        data = res.read()
+	url = 'https://www.mulesoft.org/jira/rest/api/2/search'
+	r = requests.post(url, data=json.dumps(payload), headers=headers)
 
         # Filter only the tickets required for the current deploy date...
-        issues = json.loads(data)['issues']
-
+        issues = r.json()['issues']
         return list(map(lambda x: x["key"], issues))
 
     def fetch_ticket_info(self, id):
-        conn = http.client.HTTPSConnection("www.mulesoft.org")
-
         headers = self.build_headers()
-        conn.request("GET", "/jira/rest/api/2/issue/" + id, headers=headers)
-        res = conn.getresponse()
-        data = res.read()
-
-        return json.loads(data)
+	url = 'https://www.mulesoft.org/jira/rest/api/2/issue/' + id
+	r = requests.get(url, headers=headers)
+        return r.json()
 
     def fetch_subtask_from_id(self, id):
         ticket_info = self.fetch_ticket_info(id)
