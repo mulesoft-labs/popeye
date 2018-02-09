@@ -10,10 +10,24 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%b/%d/%Y %H:%M:%S %Z',
 					level=logging.INFO)
 
+def addToAdjacencyList(dest, src):
+	if src not in adjacencyList:
+		adjacencyList[src] = []
+	if dest not in adjacencyList:
+		adjacencyList[dest] = []
+	adjacencyList[src].append(dest)
+
+def writeAdjacencyListToFile():
+	f = open('adjacency_list.txt', 'w')
+	for node in adjacencyList:
+		f.write(node + " " + ','.join(adjacencyList[node]) + '\n')
+	f.close()
+
 if len(sys.argv) != 5:
     print "Github bot not invoked correctly. Need github Access Token"
     sys.exit()
 
+adjacencyList = {}
 githubAccessToken = sys.argv[1]
 n4jUrl = sys.argv[2]
 n4jUser = sys.argv[3]
@@ -31,8 +45,11 @@ for repo in repos:
 		for dependency in yaml_content['require']:
 			me = repo
 			logger.info("Found a dependency from " + me + " -> " + dependency)
+			addToAdjacencyList(me, dependency)
 			persistor.createServiceDependency(me, dependency)
 	elif r.status_code == 404:
 		logger.error("No yaml dependency file found for " + repo)
 	else:
 		logger.error("Error in reading from github for " + repo + ".Status Code: " + str(r.status_code))
+	writeAdjacencyListToFile()
+
