@@ -14,7 +14,7 @@ args = parser.parse_args()
 
 application = Flask(__name__)
 client = JiraClient(args.jiraAccessToken)
-scheduler = scheduler(url=args.n4jUrl, username=args.n4jUser, pwd=args.n4jpwd, jiraAccessToken=args.jiraAccessToken)
+s = scheduler(url=args.n4jUrl, username=args.n4jUser, pwd=args.n4jpwd, jiraAccessToken=args.jiraAccessToken)
 
 @application.route('/mbis/', methods=['GET'])
 def getMbis():
@@ -34,7 +34,7 @@ def moveMbi(id):
 
 @application.route('/scheduler', methods=['POST'])
 def scheduler():
-    scheduler.invokeDeploymentPipeline()
+    s.invokeDeploymentPipeline()
     return "done"
 
 if __name__ == '__main__':
