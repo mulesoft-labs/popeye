@@ -42,17 +42,17 @@ class PopEyeGit:
   def cloneRepo(self):
   
     # This should be the path to the git file
-    gitFile = os.path.join(target, '.git')
+    gitFile = os.path.join(self.target, '.git')
   
     if not os.path.isdir(gitFile):
-      if os.path.isdir(target):
+      if os.path.isdir(self.target):
         self.logger.info("About the remove and recreate the clone directory")
         # directory exists so remove it
-        shutil.rmtree(target)
-        os.mkdirs(target)
+        shutil.rmtree(self.target)
+        os.mkdirs(self.target)
       self.logger.info("About to clone the repo")
       # Clone the repo
-      Repo.clone_from(self.src, self.target, depth=repoDepth)
+      Repo.clone_from(self.src, self.target, depth=self.repoDepth)
       self.logger.info("Repo cloning has been completed")
   
     # Pull the repo
