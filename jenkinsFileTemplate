@@ -82,7 +82,7 @@ node {
     }
     else {
       try {
-        jiraURL = "http://ec2-174-129-177-255.compute-1.amazonaws.com/mbis/' + jenkinsbuildnumber + '/nextStage'
+        jiraURL = "http://ec2-174-129-177-255.compute-1.amazonaws.com/mbis/" + jenkinsbuildnumber + "/nextStage"
         repsonse = httpRequest url: jiraURL, httpMode: 'PUT'
       }
       catch(e) {
