@@ -7,7 +7,13 @@ def buildJob(job, action) {
     try {
       stage (action + ' ' +  job.artifact_id) {
         echo "deploying" + job.artifact_id
-        sleep job.deploy_time
+        //sleep job.deploy_time
+        deployBuild = job.deployBuild
+        node {
+          echo "About to build external job: " + deployBuild
+          build job: '/DevOps/popeye/deploy_popeye_anypoint_ui'
+          echo "Ran external job: " + deployBuild
+        }
 
         if(!job.deploy_success) {
             error 'FAIL'
@@ -29,6 +35,7 @@ def buildJob(job, action) {
       try {
         stage (action + ' test ' +  job.artifact_id) {
           echo "Testing" + job.artifact_id
+          // smokeBuild = job.smokeBuild
           sleep job.test_time
           if(action == "deploy" && !job.test_success) {
             echo "Stage failed"

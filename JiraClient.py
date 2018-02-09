@@ -183,3 +183,18 @@ class JiraClient():
         headers = self.build_headers()
         url = 'https://www.mulesoft.org/jira/rest/api/2/issue/'
         r = requests.post(url, data=json.dumps(payload), headers=headers)
+
+
+    def update_comment(self, mib_key, comment):
+
+        payload = {
+            "body": comment
+        }
+
+        headers = self.build_headers()
+
+        url = 'https://www.mulesoft.org/jira/rest/api/2/issue/' + mib_key + '/comment'
+
+        response = requests.post(url, data=json.dumps(payload), headers=headers)
+
+        print response.status_code
