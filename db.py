@@ -82,6 +82,10 @@ class db(object):
         result = self.n4j.query(q="match (n:artifact {name:'"+_this+"'})-[r]->(m:artifact {name:'"+_that+"'})  return r.version;")
         return result[0][0]
 
+    def getSmokeBuild(self, artifact):
+        result = self.n4j.query(q="match(n) where n.name=\'" + str(artifact) + "\' return n.smoke_build")
+        return result[0][0]
+
 #TODO : no circular dependency.
 # self.n4j.query(q="MERGE (serviceThis)-[:dependsOn {r:'dependsOn'}]->(serviceThat)")
 # MERGE (n)-[:know {r:'123'}]->(test2) //Create the relation between these nodes if it does not already exist

@@ -93,6 +93,7 @@ def generateDeploymentOrder(order, deployableComponents):
 			# result = gdb.query(query)
 			# artifactComponentMap[artifact]['deployBuild'] = str(result[0][0])
 			artifactComponentMap[artifact]['deployBuild'] = str(db.getDeployBuild(artifact))
+			artifactComponentMap[artifact]['smokeBuild'] = str(db.getSmokeBuild(artifact))
 			deploymentOrder.append(artifactComponentMap[artifact])
 	return deploymentOrder
 
