@@ -1,9 +1,11 @@
 #! /usr/bin/env python
 
 from neo4jrestclient.client import GraphDatabase
+from collections import deque
 
 
-class persistor(object):
+
+class db(object):
     def __init__(self, **kwargs):
         url = kwargs['url']
         username = kwargs['username']
@@ -29,6 +31,47 @@ class persistor(object):
 
     def clearAllNodes(self):
         self.n4j.query(q="MATCH (n), ()-[r]-() DELETE n,r")
+
+    def queryNodesInTopologicalOrder(self):
+        graph={}
+        for tuple in self.n4j.query(q='MATCH (n)-[r]->(m) RETURN n.name,m.name').elements:
+            node = tuple[0]
+            dependsOnNode = tuple[1]
+            if node not in graph:
+                graph[node] = []
+            if dependsOnNode not in graph:
+                graph[dependsOnNode] = []
+            if dependsOnNode not in graph[node]:
+                graph[node].append(dependsOnNode)
+
+        in_degree = { u : 0 for u in graph }     # determine in-degree
+        for u in graph:                          # of each node
+            for v in graph[u]:
+                in_degree[v] += 1
+
+        Q = deque()                 # collect nodes with zero in-degree
+        for u in in_degree:
+            if in_degree[u] == 0:
+                Q.appendleft(u)
+
+        L = []     # list for order of nodes
+
+        while Q:
+            u = Q.pop()          # choose node of zero in-degree
+            L.append(u)          # and 'remove' it from graph
+            for v in graph[u]:
+                in_degree[v] -= 1
+                if in_degree[v] == 0:
+                    Q.appendleft(v)
+
+        if len(L) == len(graph):
+            return L
+        else:                    # if there is a cycle,
+            return []            # then return an empty list
+
+    def getDeployBuild(self, artifact):
+        result = self.n4j.query(q="match(n) where n.name=\'" + str(artifact) + "\' return n.deploy_build")
+        str(result[0][0])
 
 
 #TODO : no circular dependency.

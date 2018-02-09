@@ -4,7 +4,7 @@ import yaml
 import logging
 import argparse
 
-from persistor import persistor
+from db import db
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%b/%d/%Y %H:%M:%S %Z',
@@ -35,7 +35,7 @@ n4jUser = args.n4jUser
 n4jpwd = args.n4jpwd
 adjacencyList = {}
 repos = ['popeye_appviz', 'popeye_appviz_ui', 'popeye_cloudhub_platform', 'popeye_coreservices', 'popeye_exchange', 'popeye_anypoint_ui']
-persistor = persistor(url=n4jUrl, username=n4jUser, pwd=n4jpwd, logger=logger)
+db = db(url=n4jUrl, username=n4jUser, pwd=n4jpwd, logger=logger)
 
 for repo in repos:
 	logger.info("Scanning github dependencies for {}".format(repo))
@@ -61,8 +61,8 @@ for repo in repos:
 			for dependency in yaml_content['require']:
 				logger.info("Found a dependency from " + me['id'] + " -> " + dependency)
 				addToAdjacencyList(me['id'], dependency)
-				persistor.createServiceDependency(me, dependency)
+				db.createServiceDependency(me, dependency)
 		else:
-			persistor.createServiceDependency(me, None)
+			db.createServiceDependency(me, None)
 
 writeAdjacencyListToFile()

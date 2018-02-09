@@ -1,3 +1,4 @@
+import logging
 from collections import deque
 import JiraClient
 from neo4jrestclient.client import GraphDatabase
@@ -5,13 +6,21 @@ import time
 import argparse
 import random
 
+from db import db
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%b/%d/%Y %H:%M:%S %Z', level=logging.INFO)
+
 parser = argparse.ArgumentParser()
 parser.add_argument("-jt", "--jiraAccessToken", required=True)
 parser.add_argument("-nl", "--n4jUrl", required=True)
 parser.add_argument("-nu", "--n4jUser", required=True)
 parser.add_argument("-np", "--n4jpwd", required=True)
 args = parser.parse_args()
-gdb = GraphDatabase(args.n4jUrl, username=args.n4jUser, password=args.n4jpwd)
+# gdb = GraphDatabase(args.n4jUrl, username=args.n4jUser, password=args.n4jpwd)
+
+db = db(url=args.n4jUrl, username=args.n4jUser, pwd=args.n4jpwd, logger=logger)
+
 jiraAccessToken = args.jiraAccessToken
 
 def getGraph():
@@ -54,8 +63,7 @@ def kahn_topsort(graph):
         return []            # then return an empty list
 
 def getDeployableComponents():
-	token = jiraAccessToken
-	client = JiraClient.JiraClient(token)
+	client = JiraClient.JiraClient(jiraAccessToken)
 	deployTickets = client.fetch_artifacts(time.strftime("%Y-%m-%d"))
 	deployableComponents = []
 	for ticket in deployTickets:
@@ -76,13 +84,14 @@ def generateDeploymentOrder(order, deployableComponents):
 	deploymentOrder = []
 	for artifact in order:
 		if artifact in artifactComponentMap:
-			query = "match(n) where n.name=\'" + str(artifact) + "\' return n.deploy_build"
-			result = gdb.query(query)
-			artifactComponentMap[artifact]['deployBuild'] = str(result[0][0])
+			# query = "match(n) where n.name=\'" + str(artifact) + "\' return n.deploy_build"
+			# result = gdb.query(query)
+			# artifactComponentMap[artifact]['deployBuild'] = str(result[0][0])
+			artifactComponentMap[artifact]['deployBuild'] = db.getDeployBuild(artifact)
 			deploymentOrder.append(artifactComponentMap[artifact])
 	return deploymentOrder
 
 order = kahn_topsort(getGraph())
-componentsToBeDeployed = getDeployableComponents()
-deploymentOrder = generateDeploymentOrder(order, componentsToBeDeployed)
+#deploymentOrder = generateDeploymentOrder(order, componentsToBeDeployed)
+deploymentOrder = generateDeploymentOrder(db.queryNodesInTopologicalOrder(), getDeployableComponents())
 print deploymentOrder
